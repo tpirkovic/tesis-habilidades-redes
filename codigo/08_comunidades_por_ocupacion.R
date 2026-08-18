@@ -1,0 +1,350 @@
+# =============================================================================
+# 13_imputar_comunidades_ocupacion.R
+#
+# Imputa, para cada ocupacion (generador de posiciones, universo CASEN-RM, y
+# ocupacion de ego una vez integrada), la composicion de sus habilidades
+# efectivas (RCA>1) en terminos de las 4 comunidades de habilidades ya
+# detectadas. Responde la recomendacion de Gabriel Otero (tutoria de hace
+# dos semanas): las comunidades deben imputarse a nivel de ocupacion, no
+# quedar solo a nivel de categoria de habilidad.
+#
+# Ejemplo de lo que produce: para el ISCO 2211 (medico/a generalista), un
+# vector como (share_c1=0.55, share_c2=0.30, share_c3=0.10, share_c4=0.05)
+# que suma 1.
+#
+# Script AUTOCONTENIDO. La construccion de mat_rm es VERBATIM la de
+# 06_robustez_comunidades.R (misma fuente ya usada en 11 y 12).
+# SALIDA: consola + CSV.
+# =============================================================================
+
+suppressPackageStartupMessages({
+  library(dplyr); library(tidyr); library(readr); library(tibble); library(igraph)
+})
+options(dplyr.summarise.inform = FALSE)
+
+# =============================================================================
+# 0. RUTAS Y PARAMETROS
+# =============================================================================
+
+DATA_DIR      <- "/Users/trajanpirkovic/Library/CloudStorage/OneDrive-UniversidadCatólicadeChile/Tesis/scripts/data/esco"
+CROSSWALK_DIR <- "/Users/trajanpirkovic/Library/CloudStorage/OneDrive-UniversidadCatólicadeChile/Tesis/scripts/data"
+OUT_DIR       <- "/Users/trajanpirkovic/Library/CloudStorage/OneDrive-UniversidadCatólicadeChile/Tesis/scripts/output"
+p  <- function(f) file.path(DATA_DIR, f)
+pc <- function(f) file.path(CROSSWALK_DIR, f)
+po <- function(f) file.path(OUT_DIR, "comunidades_por_ocupacion", f)
+dir.create(po(""), showWarnings = FALSE, recursive = TRUE)
+
+COL_ISCO_RM        <- "oficio_codigo"
+COL_ISCO_CORR_ORIG <- "isco4_casen"
+COL_ISCO_CORR_NEW  <- "isco4_corregido"
+
+RCA_THRESHOLD    <- 1
+MIN_COVERAGE_OCC <- 0
+SOLO_ESENCIALES  <- TRUE
+PHI_MIN_EDGE     <- 0
+SEMILLA          <- 2025
+
+# DECISION: algoritmo base para la particion que se imputa a las ocupaciones.
+# Leiden (modularity), sobre el universo RM. Ver Decision D1 al final. Para
+# volver a Louvain como base, cambiar ALGORITMO_BASE a "louvain".
+ALGORITMO_BASE <- "leiden"   # "leiden" o "louvain"
+
+leer <- function(ruta) {
+  if (!file.exists(ruta)) stop(sprintf("No existe el archivo:\n  %s", ruta), call. = FALSE)
+  suppressWarnings(read_csv(ruta, col_types = cols(.default = "c"),
+                            show_col_types = FALSE, progress = FALSE))
+}
+
+# =============================================================================
+# 1. RECONSTRUCCION DE LA MATRIZ RM (verbatim de 06)
+# =============================================================================
+
+cat("\n=== 1. RECONSTRUCCION DE LA MATRIZ RM ===\n")
+
+osr        <- leer(p("occupationSkillRelations_es.csv"))
+occ_raw    <- leer(p("occupations_es.csv"))
+skill_hier <- leer(p("skillsHierarchy_es.csv"))
+br         <- leer(p("broaderRelationsSkillPillar_es.csv"))
+rm_casen   <- leer(pc("ocupaciones_rm_casen2024.csv"))
+corr       <- leer(pc("correcciones_isco_casen.csv"))
+gp_crosswalk <- leer(pc("gp_crosswalk.csv"))
+
+skill_to_group <- br %>%
+  filter(conceptType == "KnowledgeSkillCompetence", broaderType == "SkillGroup") %>%
+  select(skill_uri = conceptUri, group_uri = broaderUri) %>% distinct()
+
+group_to_L2 <- bind_rows(
+  skill_hier %>% filter(!is.na(`Level 3 URI`), !is.na(`Level 2 code`)) %>%
+    select(group_uri = `Level 3 URI`, L2_code = `Level 2 code`),
+  skill_hier %>% filter(!is.na(`Level 2 URI`), !is.na(`Level 2 code`)) %>%
+    select(group_uri = `Level 2 URI`, L2_code = `Level 2 code`)
+) %>% distinct(group_uri, .keep_all = TRUE)
+
+skill_cat_map <- skill_to_group %>%
+  left_join(group_to_L2, by = "group_uri") %>%
+  filter(!is.na(L2_code)) %>% distinct(skill_uri, L2_code)
+
+occ_isco <- occ_raw %>%
+  transmute(occupationUri = conceptUri, isco4 = suppressWarnings(as.integer(iscoGroup))) %>%
+  filter(!is.na(isco4))
+
+osr_f <- osr %>%
+  filter(if (SOLO_ESENCIALES) relationType == "essential" else TRUE) %>%
+  select(occupationUri, skillUri) %>% distinct()
+
+hab_cat <- skill_cat_map %>%
+  filter(skill_uri %in% osr_f$skillUri) %>%
+  select(skillUri = skill_uri, L2_code)
+
+mat_global <- osr_f %>%
+  inner_join(hab_cat, by = "skillUri", relationship = "many-to-many") %>%
+  inner_join(occ_isco, by = "occupationUri", relationship = "many-to-many") %>%
+  count(isco4, L2_code, name = "n_skills") %>%
+  pivot_wider(names_from = L2_code, values_from = n_skills, values_fill = 0) %>%
+  column_to_rownames("isco4") %>% as.matrix()
+mat_global <- mat_global[, colSums(mat_global) > 0, drop = FALSE]
+mat_global <- mat_global[rowSums(mat_global) > 0, , drop = FALSE]
+
+corr_map <- corr %>%
+  transmute(isco4_orig = suppressWarnings(as.integer(.data[[COL_ISCO_CORR_ORIG]])),
+            isco4_corr = suppressWarnings(as.integer(.data[[COL_ISCO_CORR_NEW]]))) %>%
+  filter(!is.na(isco4_orig))
+
+universo_rm <- rm_casen %>%
+  mutate(isco4_orig = suppressWarnings(as.integer(.data[[COL_ISCO_RM]]))) %>%
+  left_join(corr_map, by = "isco4_orig") %>%
+  mutate(isco4 = coalesce(isco4_corr, isco4_orig)) %>%
+  filter(!is.na(isco4)) %>% pull(isco4) %>% unique()
+
+mat_rm <- mat_global[rownames(mat_global) %in% as.character(universo_rm), , drop = FALSE]
+mat_rm <- mat_rm[, colSums(mat_rm) > 0, drop = FALSE]
+
+cat(sprintf("  Matriz RM: %d ocupaciones x %d categorias L2\n", nrow(mat_rm), ncol(mat_rm)))
+
+# =============================================================================
+# 2. RED PHI Y MATRIZ BINARIA B (misma logica de detectar() en 06)
+# =============================================================================
+# A diferencia de 11/12, aqui se necesita conservar B (no solo el grafo),
+# porque B es la matriz de habilidades efectivas que se va a agregar por
+# comunidad para cada ocupacion.
+
+construir_red_y_B <- function(mat, phi_min_edge = PHI_MIN_EDGE,
+                               rca_threshold = RCA_THRESHOLD,
+                               min_coverage = MIN_COVERAGE_OCC) {
+  esperado <- outer(rowSums(mat), colSums(mat)) / sum(mat)
+  B <- (mat / esperado > rca_threshold) * 1L
+  B <- B[, colSums(B) >= min_coverage, drop = FALSE]
+  var_ok <- apply(B, 2, function(x) length(unique(x)) > 1)
+  B <- B[, var_ok, drop = FALSE]
+
+  phi_mat <- cor(B, method = "pearson"); diag(phi_mat) <- 0
+  edges_df <- as.data.frame(as.table(phi_mat)) %>%
+    rename(from = Var1, to = Var2, phi = Freq) %>%
+    filter(as.character(from) < as.character(to), phi > phi_min_edge)
+
+  g <- graph_from_data_frame(edges_df, directed = FALSE,
+                              vertices = data.frame(name = colnames(B)))
+  E(g)$weight <- edges_df$phi
+  list(grafo = g, B = B)
+}
+
+red_rm <- construir_red_y_B(mat_rm)
+cat(sprintf("  Red RM: %d nodos, %d aristas | B: %d ocupaciones x %d categorias efectivas (alguna vez)\n",
+            vcount(red_rm$grafo), ecount(red_rm$grafo), nrow(red_rm$B), ncol(red_rm$B)))
+
+# =============================================================================
+# 3. PARTICION BASE (Leiden o Louvain, segun ALGORITMO_BASE)
+# =============================================================================
+
+cat(sprintf("\n=== 2. PARTICION BASE: %s ===\n", toupper(ALGORITMO_BASE)))
+
+set.seed(SEMILLA)
+if (ALGORITMO_BASE == "leiden") {
+  particion <- cluster_leiden(red_rm$grafo, objective_function = "modularity",
+                               weights = E(red_rm$grafo)$weight, n_iterations = 10)
+} else {
+  particion <- cluster_louvain(red_rm$grafo, weights = E(red_rm$grafo)$weight)
+}
+
+membership_L2 <- setNames(as.integer(membership(particion)), names(membership(particion)))
+n_comunidades <- length(unique(membership_L2))
+
+cat(sprintf("  N. de comunidades: %d | Modularidad: %.4f\n",
+            n_comunidades, modularity(red_rm$grafo, membership_L2, weights = E(red_rm$grafo)$weight)))
+cat("  Tamano de cada comunidad:\n")
+print(table(membership_L2))
+
+# Categorias con mayor grado por comunidad (hub), como insumo para el
+# bautizo sustantivo de las comunidades (tarea pendiente de Gabriel, no se
+# resuelve en este script, pero esto ahorra tener que recalcularlo despues)
+grados <- degree(red_rm$grafo)
+tabla_hubs <- tibble(L2_code = names(grados), comunidad = membership_L2[names(grados)],
+                     grado = grados) %>%
+  arrange(comunidad, desc(grado)) %>%
+  group_by(comunidad) %>% slice_head(n = 5) %>% ungroup()
+
+cat("\n  5 categorias mas conectadas por comunidad (insumo para el bautizo sustantivo):\n")
+print(as.data.frame(tabla_hubs), row.names = FALSE)
+write_csv(tabla_hubs, po("hubs_por_comunidad.csv"))
+
+# =============================================================================
+# 4. FUNCION DE IMPUTACION: matriz B + particion -> shares por ocupacion
+# =============================================================================
+
+calcular_shares_comunidad <- function(B, membership_L2, n_comunidades) {
+  categorias_con_comunidad <- intersect(colnames(B), names(membership_L2))
+  categorias_sin_comunidad <- setdiff(colnames(B), names(membership_L2))
+  if (length(categorias_sin_comunidad) > 0) {
+    cat(sprintf("  Advertencia: %d categorias en B sin comunidad asignada (excluidas del calculo de shares): %s\n",
+                length(categorias_sin_comunidad), paste(categorias_sin_comunidad, collapse = ", ")))
+  }
+
+  Bc <- B[, categorias_con_comunidad, drop = FALSE]
+  com_de_cada_col <- membership_L2[categorias_con_comunidad]
+
+  conteo_por_comunidad <- sapply(seq_len(n_comunidades), function(c) {
+    cols_c <- categorias_con_comunidad[com_de_cada_col == c]
+    if (length(cols_c) == 0) return(rep(0L, nrow(Bc)))
+    if (length(cols_c) == 1) return(as.integer(Bc[, cols_c]))
+    rowSums(Bc[, cols_c, drop = FALSE])
+  })
+  colnames(conteo_por_comunidad) <- paste0("n_categorias_com", seq_len(n_comunidades))
+  rownames(conteo_por_comunidad) <- rownames(Bc)
+
+  total <- rowSums(conteo_por_comunidad)
+  shares <- conteo_por_comunidad / pmax(total, 1)  # evita division por 0
+  colnames(shares) <- paste0("share_com", seq_len(n_comunidades))
+
+  tibble(isco4 = rownames(Bc), n_categorias_efectivas_total = total) %>%
+    bind_cols(as_tibble(shares)) %>%
+    bind_cols(as_tibble(conteo_por_comunidad))
+}
+
+shares_rm <- calcular_shares_comunidad(red_rm$B, membership_L2, n_comunidades)
+
+cat(sprintf("\n=== 3. SHARES CALCULADOS: %d ocupaciones RM ===\n", nrow(shares_rm)))
+cat("  Primeras filas:\n")
+print(head(as.data.frame(shares_rm)))
+
+# =============================================================================
+# 5. APLICACION A LAS 27 POSICIONES DEL GENERADOR (GP)
+# =============================================================================
+# gp_crosswalk.csv ya trae los codigos ISCO corregidos (fuente unica
+# centralizada, ver notas del pipeline principal), asi que no hace falta
+# aplicar correcciones de nuevo aqui.
+
+cat("\n=== 4. IMPUTACION A LAS 27 POSICIONES DEL GENERADOR (GP) ===\n")
+
+stopifnot(
+  "gp_crosswalk.csv debe tener columnas var e isco4" =
+    all(c("var", "isco4") %in% names(gp_crosswalk))
+)
+
+gp_shares <- gp_crosswalk %>%
+  mutate(isco4 = as.character(as.integer(isco4))) %>%
+  left_join(shares_rm, by = "isco4")
+
+n_gp_sin_match <- sum(is.na(gp_shares$n_categorias_efectivas_total))
+if (n_gp_sin_match > 0) {
+  cat(sprintf("  Advertencia: %d de %d posiciones GP sin match en la matriz RM (revisar codigo ISCO):\n",
+              n_gp_sin_match, nrow(gp_shares)))
+  print(gp_shares %>% filter(is.na(n_categorias_efectivas_total)) %>% select(var, isco4))
+} else {
+  cat(sprintf("  Las %d posiciones GP matchearon correctamente contra la matriz RM.\n", nrow(gp_shares)))
+}
+
+write_csv(gp_shares, po("shares_comunidad_generador_posiciones.csv"))
+
+# =============================================================================
+# 6. TABLA COMPLETA PARA EL UNIVERSO CASEN-RM (391 ocupaciones)
+# =============================================================================
+# Para el universo RM, shares_rm YA ES la tabla completa (se calculo
+# directamente sobre las 391 ocupaciones de mat_rm). Se agrega el label
+# de ocupacion ESCO para que sea legible sin tener que cruzar por separado.
+
+label_isco <- occ_raw %>%
+  transmute(isco4 = suppressWarnings(as.character(as.integer(iscoGroup))),
+            occupationLabel = preferredLabel) %>%
+  filter(!is.na(isco4)) %>% distinct(isco4, .keep_all = TRUE)
+
+shares_rm_legible <- shares_rm %>% left_join(label_isco, by = "isco4") %>%
+  relocate(occupationLabel, .after = isco4)
+
+write_csv(shares_rm_legible, po("shares_comunidad_casen_rm.csv"))
+
+# =============================================================================
+# 7. PUNTO DE INTEGRACION PARA LA OCUPACION DE EGO (Fondecyt)
+# =============================================================================
+# Este script NO tiene acceso a 01_preprocesar_encuesta.R, por lo que no
+# puede leer directamente Q4501/Q4402 y armar el isco4 de ego. Lo que se dej
+# a aqui es la funcion de imputacion ya lista para recibir ese vector una vez
+# que exista en el pipeline principal.
+#
+# USO ESPERADO (a integrar en el script de indicadores, ej. 04_indicadores_red.R):
+#
+#   ego_isco4 <- <vector de isco4 de ego, ya armonizado y con las mismas
+#                 correcciones de correcciones_isco_casen.csv aplicadas>
+#   ego_shares <- tibble(isco4 = as.character(ego_isco4)) |>
+#     left_join(shares_rm, by = "isco4")
+#
+# Si el isco4 de una ocupacion de ego no aparece en shares_rm (porque no
+# esta en el universo CASEN-RM, o porque quedo fuera de mat_rm por baja
+# cobertura), el left_join deja NA y hay que decidir como tratarlo: excluir
+# el caso, o usar mat_global/shares del universo global como respaldo.
+
+cat("\n=== 5. INTEGRACION PARA EGO: pendiente, ver comentario en el codigo (Paso 7) ===\n")
+cat("  Este script no tiene el isco4 de ego armonizado. shares_rm queda\n")
+cat("  disponible para un left_join directo una vez que ese vector exista.\n")
+
+# =============================================================================
+# 8. RESUMEN Y EXPORTACION FINAL
+# =============================================================================
+
+cat("\nArchivos generados en", po(""), ":\n")
+cat("  - hubs_por_comunidad.csv (insumo para bautizar las comunidades)\n")
+cat("  - shares_comunidad_generador_posiciones.csv (27 posiciones GP)\n")
+cat("  - shares_comunidad_casen_rm.csv (391 ocupaciones CASEN-RM, con etiqueta legible)\n")
+
+saveRDS(list(membership_L2 = membership_L2, shares_rm = shares_rm,
+             gp_shares = gp_shares, n_comunidades = n_comunidades,
+             algoritmo_base = ALGORITMO_BASE),
+        po("imputacion_comunidades.rds"))
+
+cat("\n=== FIN: IMPUTACION DE COMUNIDADES A NIVEL DE OCUPACION ===\n")
+
+# =============================================================================
+# DECISIONES METODOLOGICAS
+# =============================================================================
+# D1. Se usa Leiden (modularity) sobre el universo RM como particion base,
+#     en vez de Louvain. Justificacion: la comparacion ya realizada
+#     (11_comparacion_leiden_louvain_RM.R) mostro que ambos algoritmos son
+#     equivalentes en RM (ARI puntual 0.948, ARI mediano bootstrap 0.79 vs.
+#     0.76 corregido), y Leiden corrige un defecto documentado de Louvain
+#     (comunidades internamente mal conectadas), por lo que no hay razon
+#     para seguir usando el algoritmo mas antiguo como base de los
+#     indicadores derivados. Cambiar ALGORITMO_BASE a "louvain" reproduce
+#     todo con la particion anterior si se prefiere mantenerla.
+# D2. El share de cada ocupacion en una comunidad se calcula como proporcion
+#     de CATEGORIAS L2 efectivas (RCA>1) que caen en esa comunidad, no como
+#     proporcion de habilidades individuales. Esto es consistente con la
+#     definicion ya usada para Div_ego (conteo de categorias L2), no con
+#     Complex_ego (que cuenta habilidades individuales). Si se prefiere
+#     ponderar por habilidades individuales en vez de categorias, hay que
+#     reemplazar la matriz binaria B por los conteos crudos de mat_rm antes
+#     de agregar por comunidad.
+# D3. Categorias de habilidad que quedan fuera de la red (por ejemplo, sin
+#     varianza tras el filtro de RCA) no tienen comunidad asignada y se
+#     excluyen del calculo de shares, con una advertencia explicita en
+#     consola. Esto puede hacer que el share total de una ocupacion sea
+#     ligeramente distinto de 1 si esa ocupacion dependia fuertemente de una
+#     categoria excluida; revisar la advertencia antes de usar los shares en
+#     los modelos.
+# D4. Las 27 posiciones GP se cruzan usando el isco4 ya corregido de
+#     gp_crosswalk.csv (fuente unica centralizada desde el 20 de julio), sin
+#     aplicar correcciones adicionales aqui, para no duplicar logica de
+#     correccion en dos lugares distintos.
+# D5. La imputacion a la ocupacion de ego queda como punto de integracion
+#     documentado (Paso 7), no ejecutado, porque este script no tiene acceso
+#     al isco4 de ego ya armonizado (vive en 01_preprocesar_encuesta.R). Se
+#     deja la funcion y el join listos para conectar directamente.
+# =============================================================================

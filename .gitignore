@@ -1,0 +1,35 @@
+# =============================================================================
+# .gitignore — pipeline tesis Trajan Pirkovic
+# =============================================================================
+
+# Datos de la encuesta Fondecyt: NO subir a GitHub, aunque el repo sea
+# privado. Datos de personas reales (aunque anonimizados) no deberían vivir
+# en control de versiones. Si necesitas historial de esto, usa un remoto
+# privado separado (ej. OneDrive ya cumple ese rol).
+data/fondecyt/
+data_fondecyt.xlsx
+Listado de Variables*.xlsx
+
+# Salidas generadas: se regeneran corriendo el pipeline, no hace falta
+# versionarlas. Si en algún momento quieres versionar UNA figura específica
+# para el informe, agrégala con `git add -f`.
+output/
+
+# Objetos intermedios de R
+*.rds
+*.RData
+.Rhistory
+.Rproj.user/
+
+# Archivos temporales del sistema
+.DS_Store
+Thumbs.db
+
+# Respaldos y versiones archivadas (ya viven en _archivo/, pero por si
+# quedan sueltos en la raíz con el patrón de nombre típico)
+*_respaldo.R
+*_respaldo_*.R
+
+# Si en algún momento usas renv para fijar versiones de paquetes:
+# renv/library/
+# renv/staging/
