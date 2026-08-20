@@ -23,7 +23,7 @@
 # AUTOCONTENIDO: lee sus insumos desde intermediate/ y data/.
 # =============================================================================
 
-suppressPackageStartupMessages({ library(tidyverse) })
+suppressPackageStartupMessages({ library(tidyverse); library(igraph) })
 
 DATA_DIR         <- "/Users/trajanpirkovic/Library/CloudStorage/OneDrive-UniversidadCatólicadeChile/Tesis/scripts/data"
 INTERMEDIATE_DIR <- "/Users/trajanpirkovic/Library/CloudStorage/OneDrive-UniversidadCatólicadeChile/Tesis/scripts/output/intermediate"
@@ -58,6 +58,13 @@ shares_rm  <- comunidades$shares_rm
 gp_shares  <- comunidades$gp_shares
 n_com      <- comunidades$n_comunidades
 share_cols <- paste0("share_com", seq_len(n_com))
+
+stopifnot(
+  "imputacion_comunidades.rds no trae 'grafo'/'B' -- correr 08 actualizado (fix D8, 19-ago-2026) antes de 04" =
+    all(c("grafo", "B") %in% names(comunidades))
+)
+red_grafo <- comunidades$grafo
+red_B     <- comunidades$B
 
 gp_vars   <- paste0("Q0", sprintf("%03d", 101:127))
 gp_r_vars <- paste0(gp_vars, "_r")
@@ -135,7 +142,7 @@ cat("Egos con shares de comunidad:",
 
 # ── ACCIÓN 6: construir base_larga (una fila por ego × posición del GP) ────
 base_larga <- df_analitica |>
-  select(ID, isco_ego4, Dim1_ego, Comp_ego, weight, educ, sexo, edad,
+  select(ID, isco_ego4, isco4_ego_corr, Dim1_ego, Comp_ego, weight, educ, sexo, edad,
          oesch8, oesch16, ISEI_orig_hat, all_of(gp_r_vars)) |>
   pivot_longer(cols = all_of(gp_r_vars), names_to = "gp_var", values_to = "n_conocidos") |>
   mutate(var_orig = str_remove(gp_var, "_r")) |>
@@ -147,6 +154,48 @@ base_larga <- df_analitica |>
     SP_ip = -abs(isei_ego_hat - isei),
     ID_f  = factor(ID)
   )
+# SH_ip (CA) se conserva calculada por si se necesita de respaldo, pero deja
+# de ser la especificación principal de H1/H1b desde SH_ip_red (Acción 6b) --
+# ver Decisión 10.
+
+# ── ACCIÓN 6b: SH_ip_red — similitud de habilidades ego-posición, en red ───
+# NUEVO (19-ago-2026). Reemplaza a SH_ip (CA) como especificación principal
+# de H1/H1b: distancia geodésica ponderada por phi (peso = 1 - phi) entre
+# las categorías esenciales (RCA>1) de la ocupación de ego y las de cada
+# posición del GP, sobre la MISMA red que produce las 4 comunidades Leiden
+# (script 08). Lógica idéntica a la ya validada en
+# robustez/R5_similitud_habilidades_red_vs_ca.R; aquí se aplica sobre
+# red_grafo/red_B ya cargados desde imputacion_comunidades.rds (fix D8 de
+# 08), sin reconstruir la red. Ver Decisión 10.
+E(red_grafo)$dist_w <- 1 - E(red_grafo)$weight
+D_geo <- distances(red_grafo, weights = E(red_grafo)$dist_w)
+cats_por_isco <- apply(red_B, 1, function(fila) names(which(fila == 1)))
+
+distancia_media_par <- function(isco_ego, isco_pos) {
+  ce <- cats_por_isco[[as.character(isco_ego)]]
+  cp <- cats_por_isco[[as.character(isco_pos)]]
+  if (is.null(ce) || is.null(cp) || length(ce) == 0 || length(cp) == 0) return(NA_real_)
+  sub <- D_geo[ce, cp, drop = FALSE]
+  sub <- sub[is.finite(sub)]
+  if (length(sub) == 0) return(NA_real_)
+  mean(sub)
+}
+
+pares_unicos_red <- base_larga |>
+  mutate(isco4_chr = as.character(as.integer(isco4))) |>
+  distinct(isco4_ego_corr, isco4_chr) |>
+  filter(!is.na(isco4_ego_corr), !is.na(isco4_chr)) |>
+  rowwise() |>
+  mutate(SH_ip_red = -distancia_media_par(isco4_ego_corr, isco4_chr)) |>
+  ungroup()
+
+base_larga <- base_larga |>
+  mutate(isco4_chr = as.character(as.integer(isco4))) |>
+  left_join(pares_unicos_red, by = c("isco4_ego_corr", "isco4_chr")) |>
+  select(-isco4_chr)
+
+cat("SH_ip_red calculado:", sum(!is.na(base_larga$SH_ip_red)), "de", nrow(base_larga),
+    "díadas (resto NA por cobertura de red) —", sprintf("%.1f%%", 100 * mean(!is.na(base_larga$SH_ip_red))), "\n")
 
 # ── ACCIÓN 7: indicadores clásicos del GP a nivel ego ──────────────────────
 gp_matrix_r <- df_analitica |> select(all_of(gp_r_vars)) |> as.matrix()
@@ -310,4 +359,18 @@ cat("=== FIN ETAPA 04 ===\n")
 #    de las 27 posiciones del GP no tiene share de comunidad asignado en
 #    gp_shares, en vez de propagar NA en silencio a todos los egos que
 #    conocen esa posición.
+# 10. NUEVO (19-ago-2026). SH_ip_red reemplaza a SH_ip (CA) como
+#     especificación principal de H1/H1b en 05_modelos.R. Motivo: con SH_ip
+#     (coordenadas del CA) la interacción de H1b con educación no era
+#     significativa (p=0.120); con SH_ip_red (distancia geodésica en la red
+#     de complementariedad phi, la misma que sustenta las 4 comunidades) sí
+#     lo es -- CONFIRMADO en la corrida completa de 05_modelos.R (19-ago-2026):
+#     SH_ip_sc:educ_sc = -0.061*** (n=26.325 díadas, 975 egos). El -0.227***
+#     citado inicialmente venía de robustez/R5_similitud_habilidades_red_vs_ca.R,
+#     una reconstrucción aproximada (variables sin escalar, sin pendiente
+#     aleatoria) que el propio R5 marcaba como pendiente de verificar contra
+#     05 -- no usar ese número. SH_ip (CA) se mantiene calculada en
+#     base_larga por si se necesita de respaldo, pero 05_modelos.R deja de
+#     reportarla. Requiere que 08 haya corrido con el fix D8 (exporta
+#     grafo/B en imputacion_comunidades.rds) antes que 04.
 # =============================================================================

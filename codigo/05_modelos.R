@@ -16,12 +16,21 @@
 #   - Se elimina el modelo de ingreso (H4 original, descartada del diseño).
 #   - Se agrega un chequeo de colinealidad previo a la interpretación de H4.
 #
-# VALIDADO: corrido el 18-ago-2026 sobre base_larga.rds/df_ego.rds generados
-# con el CA ponderado por RM y los fixes C2/C3/C4 ya aplicados. Resultados:
-# H1 se sostiene (SH_ip significativo controlando SP_ip); H1b no (interacción
-# no significativa); H2 e ISEI_orig_hat no significativo sobre Div_Red; H3 se
-# sostiene en las 4 comunidades controlando SP_red_ego; H4 lineal y
-# cuadrático no significativos. Ver README.md para la lectura completa.
+# CAMBIO (19-ago-2026): SH_ip (CA) se reemplaza por SH_ip_red (distancia
+# geodésica en la red de complementariedad phi) como especificación
+# principal de H1/H1b -- ver Decisión 8. Requiere base_larga.rds regenerado
+# con 04_indicadores_red.R actualizado (Acción 6b).
+#
+# VALIDADO (19-ago-2026) sobre base_larga.rds/df_ego.rds regenerados con
+# SH_ip_red (fix D8/Decisión 10 de 04_indicadores_red.R). Resultados:
+# H1 se sostiene (SH_ip_sc = 0.199*** en M2, controlando SP_ip_sc); H1b se
+# sostiene (interacción SH_ip_sc:educ_sc = -0.061***, n=26.325 díadas/975
+# egos); H2 no se sostiene (ISEI_orig_hat n.s. sobre Div_Red, p=0.190;
+# predice Rango_P); H3 se sostiene en las 4 comunidades, SP_red_ego n.s. en
+# las cuatro (n=931); H4 lineal y cuadrático con ISEI_orig_hat n.s., pero
+# educ sí predice cierre_blando (-0.0070***); H4b: share_com4_ego predice
+# cierre_blando directo (-0.611***) pero la interacción con ISEI_orig_hat es
+# n.s. (p=0.197). Ver README.md para la lectura completa.
 #
 # PENDIENTE (ver README.md): H3 corre como 4 svyglm independientes sobre
 # datos composicionales (los 4 shares suman 1) -- válido para exploración,
@@ -59,7 +68,7 @@ ETIQUETAS  <- c("Direccion-servicio", "Tecnico-manual",
 
 base_larga <- base_larga |>
   mutate(
-    SH_ip_sc  = scale(SH_ip)[, 1],
+    SH_ip_sc  = scale(SH_ip_red)[, 1],  # DECISIÓN 8: SH_ip_red, no SH_ip (CA)
     SP_ip_sc  = scale(SP_ip)[, 1],
     educ_sc   = scale(educ)[, 1],
     edad_sc   = scale(edad)[, 1],
@@ -301,4 +310,17 @@ cat("=== FIN ETAPA 05 ===\n")
 #    selección vs. efecto de red y de Franzen y Hangartner (2006) sobre que
 #    las redes operan principalmente vía calidad del empleo y no vía retornos
 #    salariales directos.
+# 8. NUEVO (19-ago-2026). SH_ip_sc ahora se calcula desde SH_ip_red (distancia
+#    geodésica en la red de complementariedad phi), no desde SH_ip
+#    (coordenadas del CA). Se mantiene el nombre de columna SH_ip_sc sin
+#    cambios para no romper 06_visualizaciones.R ni 07_lectura_resultados.R,
+#    que ya leen esa columna desde modelos.rds -- solo cambia la fuente del
+#    dato, no la interfaz aguas abajo. SH_ip (CA) queda disponible en
+#    base_larga por si se necesita de respaldo, pero ya no entra a M0/M1/M2.
+#    Motivo del cambio: con SH_ip la interacción de H1b con educación no era
+#    significativa (p=0.120); con SH_ip_red sí lo es -- CONFIRMADO 19-ago-2026,
+#    corrida completa de M0-M2: SH_ip_sc:educ_sc = -0.061*** (no -0.227, que
+#    era una reconstrucción aproximada de robustez/R5, con variables sin
+#    escalar y sin pendiente aleatoria -- ver Decisión 6 de R5 y Decisión 10
+#    de 04_indicadores_red.R).
 # =============================================================================

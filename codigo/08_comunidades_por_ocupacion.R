@@ -19,7 +19,9 @@
 
 suppressPackageStartupMessages({
   library(dplyr); library(tidyr); library(readr); library(tibble); library(igraph)
-  library(ggplot2); library(ggraph); library(tidygraph); library(FactoMineR)
+  library(ggplot2); library(ggraph); library(tidygraph)
+  library(ggrepel)      # repel de etiquetas de texto en el mapa de red (Seccion 6)
+  library(graphlayouts) # layout "stress", mas legible que "fr" para redes densas
 })
 options(dplyr.summarise.inform = FALSE)
 
@@ -359,135 +361,6 @@ cat("  Este script no tiene el isco4 de ego armonizado. shares_rm queda\n")
 cat("  disponible para un left_join directo una vez que ese vector exista.\n")
 
 # =============================================================================
-# 5bis. CARACTERIZACION POR COMUNIDAD: n, ISEI implicito y phi intra
-# =============================================================================
-# NUEVO (18-ago-2026). Produce la tabla de caracterizacion de las 4 comunidades
-# que sustenta el hallazgo estructural: la comunidad Bio-ambiental-legal es
-# simultaneamente la mas cohesionada en habilidades (mayor phi intra) y la mas
-# dispersa en estatus (mayor DE de ISEI).
-#
-# IMPORTANTE -- por que el CA se re-estima aqui en vez de leer ca_coords.rds:
-# 03_ca_habilidades_isei.R guarda las coordenadas de las OCUPACIONES (filas),
-# no de las CATEGORIAS DE HABILIDAD (columnas), que es lo que hace falta para
-# el ISEI implicito por comunidad. Ademas, el signo de los ejes de un CA es
-# arbitrario entre corridas: si se entrenara la regresion isei~Dim1 con las
-# coordenadas de 03 y se aplicara a coordenadas de columna de otra corrida,
-# el ISEI implicito podria salir invertido sin ningun aviso. Por eso el CA se
-# corre aqui completo (misma matriz mat_rm, misma ponderacion poblacional que
-# 03) y la regresion se entrena y aplica DENTRO de esta misma geometria, que
-# es internamente consistente por construccion.
-#
-# ADVERTENCIA A DECLARAR AL REPORTAR: el ISEI por comunidad es IMPLICITO, no
-# medido. Se extrapola proyectando las categorias de habilidad sobre el eje
-# Dim1 y aplicando una regresion isei~Dim1 ajustada sobre solo 27 posiciones
-# del generador (R2 ~ 0.36). El contraste "mas cohesionada / mas dispersa en
-# estatus" tiene entonces una pata solida (phi, medido directo sobre la matriz
-# de complementariedad) y una debil (ISEI, extrapolado). Declararlo antes de
-# interpretar, no despues.
-
-cat("\n=== 5bis. CARACTERIZACION POR COMUNIDAD ===\n")
-
-# ── Pesos poblacionales por ocupacion, alineados fila a fila con mat_rm ─────
-pesos_rm <- rm_casen %>%
-  mutate(isco4_orig = suppressWarnings(as.integer(.data[[COL_ISCO_RM]])),
-         porcentaje = suppressWarnings(as.numeric(porcentaje))) %>%
-  left_join(corr_map, by = "isco4_orig") %>%
-  mutate(isco4 = coalesce(isco4_corr, isco4_orig)) %>%
-  filter(!is.na(isco4), !is.na(porcentaje)) %>%
-  group_by(isco4) %>%
-  summarise(porcentaje = sum(porcentaje), .groups = "drop")
-
-pesos_vec <- pesos_rm$porcentaje[match(as.integer(rownames(mat_rm)), pesos_rm$isco4)]
-
-stopifnot(
-  "Toda ocupacion de mat_rm debe tener peso poblacional CASEN-RM" =
-    !any(is.na(pesos_vec)),
-  "El vector de pesos debe alinear fila a fila con mat_rm" =
-    length(pesos_vec) == nrow(mat_rm)
-)
-
-# ── CA ponderado (misma especificacion que 03_ca_habilidades_isei.R) ────────
-ca_com <- FactoMineR::CA(mat_rm, ncp = 5, graph = FALSE, row.w = pesos_vec)
-
-coords_ocupacion <- as.data.frame(ca_com$row$coord) %>%
-  tibble::rownames_to_column("isco4") %>%
-  mutate(isco4 = as.integer(isco4)) %>%
-  rename(Dim1_occ = `Dim 1`, Dim2_occ = `Dim 2`)
-
-coords_habilidad <- as.data.frame(ca_com$col$coord) %>%
-  tibble::rownames_to_column("L2_code") %>%
-  rename(Dim1_skill = `Dim 1`, Dim2_skill = `Dim 2`)
-
-# ── Regresion isei ~ Dim1, entrenada sobre las 27 posiciones del generador ──
-gp_ca <- gp_crosswalk %>%
-  mutate(isco4 = suppressWarnings(as.integer(isco4)),
-         isei  = suppressWarnings(as.numeric(isei))) %>%
-  left_join(coords_ocupacion, by = "isco4") %>%
-  filter(!is.na(Dim1_occ), !is.na(isei))
-
-isei_from_dim1 <- lm(isei ~ Dim1_occ, data = gp_ca)
-r2_isei <- summary(isei_from_dim1)$r.squared
-r_dim1_isei <- cor(gp_ca$Dim1_occ, gp_ca$isei)
-
-cat(sprintf("  Regresion isei ~ Dim1 sobre %d posiciones GP: R2 = %.3f | r(Dim1, ISEI) = %.3f\n",
-            nrow(gp_ca), r2_isei, r_dim1_isei))
-cat(sprintf("  r(Dim2, ISEI) = %.3f (contraste: el segundo eje NO sigue el prestigio)\n",
-            cor(gp_ca$Dim2_occ, gp_ca$isei)))
-
-# ── phi intra-comunidad: media de phi entre pares DENTRO de cada comunidad ──
-# Se recalcula phi desde la misma matriz binaria B que uso la deteccion, para
-# garantizar que es exactamente la misma medida (no una aproximacion).
-phi_mat <- cor(red_rm$B, method = "pearson")
-diag(phi_mat) <- NA
-
-phi_intra_comunidad <- function(codigos) {
-  if (length(codigos) < 2) return(NA_real_)
-  sub <- phi_mat[codigos, codigos, drop = FALSE]
-  mean(sub[upper.tri(sub)], na.rm = TRUE)
-}
-
-# ── Tabla final de caracterizacion ─────────────────────────────────────────
-tabla_caracterizacion <- tibble(
-  L2_code   = names(membership_L2),
-  comunidad = as.integer(membership_L2)
-) %>%
-  left_join(coords_habilidad, by = "L2_code") %>%
-  mutate(isei_implicito = predict(isei_from_dim1,
-                                   newdata = data.frame(Dim1_occ = Dim1_skill))) %>%
-  group_by(comunidad) %>%
-  summarise(
-    etiqueta     = ETIQUETAS_COMUNIDAD[as.character(first(comunidad))],
-    n_categorias = n(),
-    isei_medio   = mean(isei_implicito, na.rm = TRUE),
-    isei_de      = sd(isei_implicito, na.rm = TRUE),
-    phi_intra    = phi_intra_comunidad(L2_code),
-    .groups = "drop"
-  ) %>%
-  arrange(comunidad)
-
-cat("\n  Caracterizacion de las 4 comunidades (particion Leiden/RM vigente):\n")
-print(as.data.frame(tabla_caracterizacion %>%
-                      mutate(across(c(isei_medio, isei_de, phi_intra), ~ round(.x, 3)))),
-      row.names = FALSE)
-
-write_csv(tabla_caracterizacion, po("caracterizacion_comunidades.csv"))
-
-# ── Verificacion explicita del hallazgo estructural ────────────────────────
-com_mas_cohesionada <- tabla_caracterizacion$etiqueta[which.max(tabla_caracterizacion$phi_intra)]
-com_mas_dispersa    <- tabla_caracterizacion$etiqueta[which.max(tabla_caracterizacion$isei_de)]
-
-cat(sprintf("\n  Comunidad mas COHESIONADA (mayor phi intra): %s\n", com_mas_cohesionada))
-cat(sprintf("  Comunidad mas DISPERSA en estatus (mayor DE de ISEI): %s\n", com_mas_dispersa))
-if (com_mas_cohesionada == com_mas_dispersa) {
-  cat("  -> El hallazgo estructural SE VERIFICA: la misma comunidad es la mas\n")
-  cat("     cohesionada en habilidades y la mas dispersa en prestigio.\n")
-} else {
-  cat("  -> ATENCION: el hallazgo NO se verifica en esta corrida. La comunidad\n")
-  cat("     mas cohesionada y la mas dispersa en estatus son distintas. Revisar\n")
-  cat("     antes de reportar el argumento de cohesion/dispersion.\n")
-}
-
-# =============================================================================
 # 6. MAPA DE RED: comunidades de habilidades segun Leiden/RM (NUEVO 18-ago-2026)
 # =============================================================================
 # Visualizacion de la red de complementariedad (phi, RCA>1) usada para la
@@ -496,6 +369,14 @@ if (com_mas_cohesionada == com_mas_dispersa) {
 # de robustez/R4_deteccion_comunidades_L2_global.R, que corre Louvain sobre
 # el universo GLOBAL sin ponderar y por lo tanto no corresponde a los
 # resultados vigentes de la tesis. Este es el mapa que va en la presentacion.
+#
+# REVISION 18-ago-2026 (c). Se etiquetan las 110 categorias (todas, no solo
+# los hubs por comunidad de la version anterior) y se elimina el mapa
+# interactivo (visNetwork) agregado en la revision (b): la version final
+# vuelve a ser un unico PNG estatico, pero con nombre real (no codigo crudo)
+# en cada nodo. Con 110 etiquetas simultaneas el declutter de aristas pasa a
+# ser critico -- se sube el umbral de phi para el dibujo y se usa una fuente
+# mas pequena con mayor fuerza de repulsion (ver D9 al final).
 
 cat("\n=== 6. MAPA DE RED: comunidades Leiden/RM ===\n")
 
@@ -506,54 +387,130 @@ COLORES_COMUNIDAD <- c(
   "Bio_ambiental_legal"         = "#B23A48"
 )
 
+# --- 6.1 Diccionario de etiquetas legibles (codigo L2 -> nombre ESCO) -------
+# skill_hier ya esta cargado (Seccion 1). Un mismo Level 2 code puede repetir
+# nombre en varias filas (una por skill); distinct() se queda con una.
+l2_labels <- skill_hier %>%
+  filter(!is.na(`Level 2 code`), !is.na(`Level 2 preferred term`)) %>%
+  distinct(`Level 2 code`, `Level 2 preferred term`) %>%
+  rename(L2_code = `Level 2 code`, etiqueta_larga = `Level 2 preferred term`)
+
+acortar_etiqueta <- function(x, n = 26) {
+  x <- paste0(toupper(substr(x, 1, 1)), substr(x, 2, nchar(x)))
+  ifelse(nchar(x) > n, paste0(substr(x, 1, n - 1), "\u2026"), x)
+}
+
 grados_red <- degree(red_rm$grafo)
 
 nodos_red <- tibble(
   L2_code   = names(grados_red),
   grado     = grados_red,
   comunidad = ETIQUETAS_COMUNIDAD[as.character(membership_L2[names(grados_red)])]
-)
+) %>%
+  left_join(l2_labels, by = "L2_code") %>%
+  mutate(
+    etiqueta_larga = coalesce(etiqueta_larga, L2_code),
+    etiqueta_corta = acortar_etiqueta(etiqueta_larga),
+    etiqueta_nodo  = sprintf("%s (%s)", etiqueta_corta, L2_code)
+  )
 
-# Etiqueta textual corta para cada categoria (evita amontonar 110 nombres
-# largos ESCO encima de los nodos; solo se rotulan los mas conectados de
-# cada comunidad -- los mismos que ya identifica tabla_hubs mas arriba).
-nodos_a_rotular <- tabla_hubs |>
-  pull(L2_code) |>
-  unique()
+n_sin_nombre <- sum(nodos_red$etiqueta_larga == nodos_red$L2_code)
+if (n_sin_nombre > 0) {
+  cat(sprintf("  Advertencia: %d categorias sin nombre en skillsHierarchy_es.csv (se muestra solo el codigo): %s\n",
+              n_sin_nombre, paste(nodos_red$L2_code[nodos_red$etiqueta_larga == nodos_red$L2_code], collapse = ", ")))
+}
 
+# Se etiquetan TODOS los nodos de la red (110 categorias), a pedido -- ya no
+# se restringe a los hubs por comunidad. anclas se mantiene como referencia
+# (las 4 categorias que definen el nombre de cada comunidad), pero como todo
+# el grafo lleva etiqueta ya no cumple una funcion de filtro aqui.
 grafo_tidy <- as_tbl_graph(red_rm$grafo) |>
   activate(nodes) |>
-  left_join(nodos_red, by = c("name" = "L2_code")) |>
-  mutate(mostrar_etiqueta = name %in% nodos_a_rotular)
+  left_join(nodos_red, by = c("name" = "L2_code"))
+
+# --- 6.2 Adelgazar aristas SOLO para el dibujo (no para el analisis) -------
+# La red completa (phi>0 entre las 110 categorias) satura visualmente
+# cualquier layout, y con TODOS los nodos ahora etiquetados el problema se
+# agrava: el texto necesita espacio libre. Se sube el umbral respecto de las
+# versiones anteriores (0.75 -> 0.85 -> 0.90 ahora) y se conserva solo el
+# 10% de aristas con mayor phi, unicamente para el render -- la deteccion de
+# comunidades de la Seccion 2-3 sigue usando la red completa.
+EDGE_PLOT_QUANTILE <- 0.90
+umbral_plot <- quantile(E(red_rm$grafo)$weight, EDGE_PLOT_QUANTILE)
+grafo_tidy_plot <- grafo_tidy |>
+  activate(edges) |>
+  filter(weight >= umbral_plot)
+
+cat(sprintf("  Aristas mostradas en el mapa: %d de %d (percentil %.0f de phi, solo para renderizado)\n",
+            ecount(grafo_tidy_plot), ecount(red_rm$grafo), EDGE_PLOT_QUANTILE * 100))
+cat(sprintf("  Categorias rotuladas: %d de %d (todas)\n",
+            nrow(nodos_red), vcount(red_rm$grafo)))
 
 set.seed(2025)  # layout reproducible; no afecta la particion, solo el dibujo
-p_red_comunidades <- ggraph(grafo_tidy, layout = "fr") +
-  geom_edge_link(aes(width = weight), color = "grey85", alpha = 0.4, show.legend = FALSE) +
-  scale_edge_width(range = c(0.1, 1.2)) +
-  geom_node_point(aes(size = grado, color = comunidad), alpha = 0.85) +
-  geom_node_text(aes(label = ifelse(mostrar_etiqueta, name, "")),
-                  repel = TRUE, size = 3, color = "grey15", max.overlaps = 30) +
-  scale_color_manual(values = COLORES_COMUNIDAD, name = "Comunidad\n(Leiden, RM)") +
-  scale_size_continuous(range = c(2, 9), name = "Grado") +
+p_red_comunidades <- ggraph(grafo_tidy_plot, layout = "stress") +
+  geom_edge_link(aes(alpha = weight, width = weight), color = "grey70",
+                  show.legend = FALSE) +
+  scale_edge_width(range = c(0.1, 1.0)) +
+  scale_edge_alpha(range = c(0.08, 0.55)) +
+  geom_node_point(aes(size = grado, color = comunidad),
+                   alpha = 0.9, stroke = 0.3) +
+  geom_node_point(aes(size = grado), shape = 21, color = "white",
+                   stroke = 0.25, alpha = 0.9, show.legend = FALSE) +
+  ggrepel::geom_text_repel(
+    aes(x = x, y = y, label = etiqueta_nodo),
+    size = 2.2, color = "grey15", fontface = "plain",
+    max.overlaps = Inf, force = 6, force_pull = 0.3,
+    box.padding = 0.25, point.padding = 0.1,
+    min.segment.length = 0, segment.size = 0.15, segment.color = "grey60",
+    segment.alpha = 0.6, seed = 2025
+  ) +
+  scale_color_manual(
+    values = COLORES_COMUNIDAD, name = "Comunidad (Leiden, RM)",
+    labels = c(
+      "Direccion_servicio"          = "Direcci\u00f3n y servicio",
+      "Tecnico_manual"              = "T\u00e9cnico-manual",
+      "Analitico_digital_simbolico" = "Anal\u00edtico-digital-simb\u00f3lico",
+      "Bio_ambiental_legal"         = "Bio-ambiental-legal"
+    )
+  ) +
+  scale_size_continuous(range = c(2, 10), name = "Grado\n(conexiones phi)") +
+  guides(color = guide_legend(override.aes = list(size = 5), nrow = 2)) +
   labs(
-    title    = "Red de complementariedad de habilidades (phi, RCA>1)",
-    subtitle = sprintf("Particion Leiden sobre universo RM, %d categorias L2, modularidad %.3f",
-                        vcount(red_rm$grafo),
-                        modularity(red_rm$grafo, membership_L2, weights = E(red_rm$grafo)$weight))
+    title    = "Red de complementariedad de habilidades (\u03c6, RCA>1)",
+    subtitle = sprintf(
+      "Partici\u00f3n Leiden sobre universo RM \u00b7 %d categor\u00edas ESCO L2 \u00b7 modularidad %.3f\nTodas las categor\u00edas rotuladas con nombre \u00b7 c\u00f3digo ESCO entre par\u00e9ntesis",
+      vcount(red_rm$grafo),
+      modularity(red_rm$grafo, membership_L2, weights = E(red_rm$grafo)$weight)
+    ),
+    caption = sprintf("Solo se dibuja el %.0f%% de aristas con mayor \u03c6 (declutter visual; la detecci\u00f3n de comunidades usa la red completa)",
+                       (1 - EDGE_PLOT_QUANTILE) * 100)
   ) +
   theme_void(base_size = 12) +
   theme(
-    plot.title    = element_text(face = "bold", size = 14, hjust = 0.5),
-    plot.subtitle = element_text(size = 10, hjust = 0.5, color = "grey40"),
-    legend.position = "bottom"
+    plot.title      = element_text(face = "bold", size = 16, hjust = 0.5),
+    plot.subtitle   = element_text(size = 10, hjust = 0.5, color = "grey35", lineheight = 1.15),
+    plot.caption    = element_text(size = 8, hjust = 0.5, color = "grey55", margin = margin(t = 8)),
+    legend.position = "bottom",
+    legend.box      = "vertical",
+    legend.title    = element_text(size = 10),
+    legend.text     = element_text(size = 9),
+    plot.margin     = margin(15, 20, 10, 20)
   )
 
 ggsave(po("fig_red_comunidades_leiden_RM.png"), p_red_comunidades,
-       width = 12, height = 10, dpi = 300, bg = "white")
+       width = 22, height = 18, dpi = 320, bg = "white")
 
 cat("Guardado:", po("fig_red_comunidades_leiden_RM.png"), "\n")
-cat("(", vcount(red_rm$grafo), "nodos,", ecount(red_rm$grafo), "aristas,",
-    length(nodos_a_rotular), "categorias rotuladas -- las 5 mas conectadas por comunidad )\n")
+cat("(", vcount(red_rm$grafo), "nodos,", ecount(grafo_tidy_plot), "de", ecount(red_rm$grafo),
+    "aristas dibujadas,", nrow(nodos_red), "categorias rotuladas con nombre real )\n")
+
+# Tabla auxiliar (codigo -> nombre completo, comunidad, grado) para pie de
+# figura, anexo, o como diccionario de referencia rapida fuera del grafico.
+write_csv(
+  nodos_red %>% select(L2_code, etiqueta_larga, comunidad, grado) %>%
+    arrange(comunidad, desc(grado)),
+  po("leyenda_categorias_rotuladas.csv")
+)
 
 # =============================================================================
 # 8. RESUMEN Y EXPORTACION FINAL
@@ -564,7 +521,6 @@ cat("  - hubs_por_comunidad.csv (insumo para bautizar las comunidades)\n")
 cat("  - shares_comunidad_generador_posiciones.csv (27 posiciones GP)\n")
 cat("  - shares_comunidad_casen_rm.csv (391 ocupaciones CASEN-RM, con etiqueta legible)\n")
 cat("  - fig_red_comunidades_leiden_RM.png (mapa de red, particion vigente)\n")
-cat("  - caracterizacion_comunidades.csv (n, ISEI implicito, phi intra por comunidad)\n")
 
 saveRDS(list(membership_L2 = membership_L2, shares_rm = shares_rm,
              gp_shares = gp_shares, n_comunidades = n_comunidades,
@@ -636,4 +592,46 @@ cat("\n=== FIN: IMPUTACION DE COMUNIDADES A NIVEL DE OCUPACION ===\n")
 #     produce robustez/R4_deteccion_comunidades_L2_global.R -- ese es
 #     Louvain sobre el universo GLOBAL, una particion de robustez/
 #     comparacion, no la que sustenta los resultados vigentes de la tesis.
+# D8. NUEVO (18-ago-2026, b). Dos cambios al mapa de la Seccion 6, ambos
+#     puramente de renderizado (no tocan la deteccion de comunidades, que
+#     sigue usando la red completa de la Seccion 2-3):
+#     (i)  Las etiquetas de nodo pasan de codigo ESCO crudo (ej. "042") a
+#          nombre real + codigo entre parentesis (ej. "Derecho (042)"),
+#          usando skillsHierarchy_es.csv ("Level 2 preferred term"). Se
+#          preserva el codigo porque el texto de la tesis y las tablas de
+#          robustez (bootstrap, grilla de umbrales phi) citan las categorias
+#          por codigo, no por nombre.
+#     (ii) geom_edge_link ya no dibuja las ~3000+ aristas phi>0: se filtra al
+#          25% de mayor peso (EDGE_PLOT_QUANTILE=0.75) solo para el dibujo,
+#          porque con las ~5000 aristas completas el mapa se vuelve una
+#          "bola de pelo" ilegible (ver fig_red_comunidades_leiden_RM.png
+#          version anterior). Layout cambia de "fr" a "stress"
+#          (graphlayouts), que separa mejor comunidades densas. Si se
+#          necesita citar la cantidad exacta de aristas de la red analitica
+#          completa, usar ecount(red_rm$grafo) (Seccion 2), no el grafico.
+#     Se exporta ademas leyenda_categorias_rotuladas.csv (codigo, nombre
+#     completo, comunidad, grado) como insumo para pie de figura o anexo si
+#     se prefiere una leyenda separada en vez de nombre+codigo en el nodo.
+# D9. NUEVO (18-ago-2026, c). Revertido el mapa interactivo agregado en D8-b:
+#     a pedido, la version final vuelve a ser un unico PNG estatico, pero
+#     ahora con las 110 categorias etiquetadas (antes solo 5-10 por
+#     comunidad). Cambios especificos respecto de D8:
+#     (i)  Se elimina la Seccion 6b (visNetwork) completa y las librerias
+#          visNetwork/htmlwidgets del bloque de carga inicial. Ya no se
+#          genera fig_red_comunidades_leiden_RM_interactivo.html.
+#     (ii) mostrar_etiqueta / nodos_a_rotular (el filtro de hubs) se
+#          eliminan: geom_text_repel ahora usa etiqueta_nodo directamente
+#          para todos los nodos del grafo filtrado.
+#     (iii) Para que 110 etiquetas simultaneas sigan siendo legibles:
+#          EDGE_PLOT_QUANTILE sube a 0.90 (solo 10% de aristas con mayor phi
+#          dibujadas, vs. 25% y 15% en revisiones previas), el tamano de
+#          fuente de las etiquetas baja a 2.2, la fuerza de repulsion de
+#          ggrepel sube (force=6), y el lienzo crece a 22x18" a 320 dpi. Aun
+#          asi, con 110 nombres en un area finita algo de sobreposicion
+#          residual es esperable en las zonas mas densas de cada comunidad;
+#          si eso resulta un problema para la version final de la tesis,
+#          la alternativa mas simple es imprimir a mayor tamano fisico (ej.
+#          poster o anexo A3) en vez de reducir mas la fuente.
+#     leyenda_categorias_rotuladas.csv ahora exporta las 110 categorias (ya
+#     no un subconjunto de hubs), como diccionario completo codigo->nombre.
 # =============================================================================
