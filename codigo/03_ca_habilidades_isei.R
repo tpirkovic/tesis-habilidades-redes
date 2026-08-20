@@ -26,6 +26,11 @@
 # faltaba -- se aplicaba en 04 y en 15, pero no aquí -- por lo que la
 # cobertura de Dim1_ego quedaba en 93.5% en vez del 95.1% correcto.
 #
+# CAMBIO ADICIONAL (19-ago-2026): se agrega la Acción 14, que exporta y
+# muestra en RStudio dos visualizaciones del espacio CA: el universo
+# completo de 391 ocupaciones de la RM, y las 27 posiciones del generador
+# de posiciones solas. Ambas usan ggrepel para las etiquetas.
+#
 # AUTOCONTENIDO: lee sus insumos desde disco.
 #
 # ACCIONES QUE EJECUTA ESTE SCRIPT, EN ORDEN:
@@ -44,9 +49,13 @@
 #   13. Guarda coordenadas e indicadores ISEI a disco (ca_coords.rds,
 #       ego_ca_isei.rds -- mismos nombres de archivo y de columna que
 #       04_indicadores_red.R ya espera, sin necesidad de ningún parche).
+#   14. Exporta y muestra en RStudio las visualizaciones del espacio CA
+#       (391 ocupaciones RM y 27 posiciones del GP).
 # =============================================================================
 
-suppressPackageStartupMessages({ library(tidyverse); library(FactoMineR) })
+suppressPackageStartupMessages({
+  library(tidyverse); library(FactoMineR); library(ggrepel)
+})
 set.seed(2025)
 
 ESCO_DIR         <- "/Users/trajanpirkovic/Library/CloudStorage/OneDrive-UniversidadCatólicadeChile/Tesis/scripts/data/esco"
@@ -316,6 +325,79 @@ cat("\nGuardado: intermediate/ca_coords.rds, ego_ca_isei.rds, reporte_cobertura_
 cat("=== FIN ETAPA 03 ===\n")
 
 # =============================================================================
+# ACCIÓN 14 · Visualizaciones del espacio CA: 391 ocupaciones y 27 del GP
+# =============================================================================
+cat("\n=== ACCIÓN 14: Visualizaciones del espacio CA ===\n")
+
+GRAFICOS_DIR <- file.path(OUT_DIR, "graficos")
+if (!dir.exists(GRAFICOS_DIR)) dir.create(GRAFICOS_DIR, recursive = TRUE)
+
+# Base para el gráfico de 391: coordenadas CA + descriptor CASEN + ISEI
+# oficial (Ganzeboom). Se marca cuál de las 391 corresponde a una de las 27
+# posiciones del GP, para resaltarlas con otro color y ser las únicas
+# etiquetadas -- etiquetar las 391 es ilegible incluso con repulsión.
+occ_plot_data <- ca_coords |>
+  left_join(casen_rm |> select(isco4, oficio_descriptor), by = "isco4") |>
+  left_join(isei08 |> rename(isco4 = isco08, isei = isei08), by = "isco4") |>
+  mutate(es_gp = isco4 %in% gp_crosswalk$isco4)
+
+cat("Ocupaciones con ISEI para el gráfico de 391:",
+    sum(!is.na(occ_plot_data$isei)), "de", nrow(occ_plot_data), "\n")
+
+etiquetas_gp <- occ_plot_data |>
+  filter(es_gp) |>
+  left_join(gp_crosswalk |> select(isco4, label), by = "isco4") |>
+  mutate(label = coalesce(label, oficio_descriptor))
+
+# --- Gráfico 1: las 391 ocupaciones del universo RM ------------------------
+p_ca_391 <- ggplot(occ_plot_data, aes(x = Dim1, y = Dim2)) +
+  geom_point(aes(size = isei, color = es_gp), alpha = 0.55) +
+  geom_text_repel(
+    data = etiquetas_gp, aes(label = label),
+    size = 3, max.overlaps = Inf, min.segment.length = 0,
+    segment.color = "grey60", seed = 2025
+  ) +
+  scale_color_manual(values = c(`FALSE` = "#9AA5B1", `TRUE` = "#173F8A"),
+                      guide = "none") +
+  scale_size_continuous(name = "ISEI\n(prestigio)", range = c(1, 8)) +
+  labs(
+    title    = "Espacio de habilidades (CA): 391 ocupaciones de la RM",
+    subtitle = "Cercanía = perfiles de habilidades similares · Tamaño = prestigio (ISEI) · Azul = 27 posiciones del generador",
+    x = "Dim1  (socio-cognitivo \u2194 manual)",
+    y = "Dim2  (orientación sectorial)"
+  ) +
+  theme_minimal(base_size = 14)
+
+# --- Gráfico 2: las 27 posiciones del generador, solas ---------------------
+gp_plot_data <- gp_coords |> filter(!is.na(Dim1_p))
+
+p_ca_27 <- ggplot(gp_plot_data, aes(x = Dim1_p, y = Dim2_p, size = isei)) +
+  geom_point(alpha = 0.6, color = "#173F8A") +
+  geom_text_repel(aes(label = label), size = 3.5, max.overlaps = Inf,
+                   min.segment.length = 0, segment.color = "grey60", seed = 2025) +
+  scale_size_continuous(name = "ISEI\n(prestigio)", range = c(2, 12)) +
+  labs(
+    title    = "Espacio de habilidades (CA): 27 ocupaciones del generador de posiciones",
+    subtitle = "Cercanía = perfiles de habilidades similares · Tamaño = prestigio (ISEI)",
+    x = "Dim1  (socio-cognitivo \u2194 manual)",
+    y = "Dim2  (orientación sectorial)"
+  ) +
+  theme_minimal(base_size = 14)
+
+# Mostrar ambos en el panel de Plots de RStudio
+print(p_ca_391)
+print(p_ca_27)
+
+# Exportar
+ggsave(file.path(GRAFICOS_DIR, "fig_CA_espacio_391.png"), p_ca_391,
+       width = 12, height = 9, dpi = 300, bg = "white")
+ggsave(file.path(GRAFICOS_DIR, "fig_CA_espacio_27_GP.png"), p_ca_27,
+       width = 10, height = 8, dpi = 300, bg = "white")
+
+cat("\nGuardado: output/graficos/fig_CA_espacio_391.png, fig_CA_espacio_27_GP.png\n")
+cat("=== FIN ACCIÓN 14 ===\n")
+
+# =============================================================================
 # DECISIONES METODOLÓGICAS
 # =============================================================================
 # D1. El CA se estima sobre el universo ocupacional RM (CASEN 2024),
@@ -338,4 +420,9 @@ cat("=== FIN ETAPA 03 ===\n")
 #     los .rds ya generados pero no el script que los produce -- un re-run
 #     completo del pipeline sin este fix habría vuelto a perder la
 #     corrección.
+# D5. Se exportan dos visualizaciones del espacio CA: el universo completo
+#     de 391 ocupaciones (con solo las 27 del GP etiquetadas, por
+#     legibilidad) y las 27 del GP solas. Ambas usan ggrepel para evitar el
+#     solapamiento de etiquetas que tenía la versión anterior. Guardadas en
+#     output/graficos/.
 # =============================================================================

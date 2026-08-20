@@ -19,6 +19,7 @@
 
 suppressPackageStartupMessages({
   library(dplyr); library(tidyr); library(readr); library(tibble); library(igraph)
+  library(ggplot2); library(ggraph); library(tidygraph); library(FactoMineR)
 })
 options(dplyr.summarise.inform = FALSE)
 
@@ -48,6 +49,30 @@ SEMILLA          <- 2025
 # Leiden (modularity), sobre el universo RM. Ver Decision D1 al final. Para
 # volver a Louvain como base, cambiar ALGORITMO_BASE a "louvain".
 ALGORITMO_BASE <- "leiden"   # "leiden" o "louvain"
+
+# ANCLAJE POR CONTENIDO (fix C2, 2026-08-18): igraph asigna IDs de comunidad
+# arbitrarios (1, 2, 3, 4) que pueden cambiar de corrida a corrida sin que el
+# CONTENIDO sustantivo cambie. Antes, share_com1..4 heredaba ese orden
+# arbitrario, y 04_indicadores_red.R y 18_modelos_habilidades_origen.R
+# asumian en silencio que share_com1 siempre era "Direccion-servicio", etc.
+# Esta es la misma logica de anclaje ya validada y en uso en
+# 14_tabla_grados_completa.R (ver ese script para el detalle de como se
+# identificaron las anclas). Aqui se aplica ANTES de calcular shares_rm y
+# gp_shares, remapeando los IDs de membership_L2 para que la comunidad 1
+# quede SIEMPRE anclada a Direccion-servicio, la 2 a Tecnico-manual, etc.,
+# sin importar el orden que haya devuelto igraph en esta corrida particular.
+# Con este remapeo, 04 y 18 NO necesitan cambios: siguen leyendo
+# share_com1..4 igual que antes, pero ahora esa numeracion es estable.
+ETIQUETAS_COMUNIDAD <- c(
+  "1" = "Direccion_servicio",
+  "2" = "Tecnico_manual",
+  "3" = "Analitico_digital_simbolico",
+  "4" = "Bio_ambiental_legal"
+)
+ANCLA_1_DIRECCION <- "S4.9"   # tomar decisiones
+ANCLA_2_TECNICO   <- "053"    # ciencias fisicas
+ANCLA_3_ANALITICO <- "S2.3"   # gestionar informacion
+ANCLA_4_AGRO      <- "081"    # agricultura
 
 leer <- function(ruta) {
   if (!file.exists(ruta)) stop(sprintf("No existe el archivo:\n  %s", ruta), call. = FALSE)
@@ -168,6 +193,43 @@ if (ALGORITMO_BASE == "leiden") {
 
 membership_L2 <- setNames(as.integer(membership(particion)), names(membership(particion)))
 n_comunidades <- length(unique(membership_L2))
+
+# FIX C2: remapear los IDs arbitrarios de igraph a un orden fijo, anclado
+# por contenido, ANTES de cualquier calculo posterior. Verifica primero que
+# las 4 categorias ancla existan en esta corrida y caigan en 4 comunidades
+# distintas (si Leiden encontrara un numero de comunidades distinto de 4,
+# o si dos anclas cayeran en la misma comunidad, esto detiene la ejecucion
+# en vez de asignar etiquetas incorrectas en silencio).
+anclas <- c(ANCLA_1_DIRECCION, ANCLA_2_TECNICO, ANCLA_3_ANALITICO, ANCLA_4_AGRO)
+anclas_faltantes <- setdiff(anclas, names(membership_L2))
+if (length(anclas_faltantes) > 0) {
+  stop(sprintf(
+    "No se puede anclar por contenido: las categorias ancla %s no aparecen en membership_L2 de esta corrida (revisar si mat_rm perdio categorias por cobertura o RCA).",
+    paste(anclas_faltantes, collapse = ", ")
+  ))
+}
+
+id_original_de_ancla <- c(
+  membership_L2[[ANCLA_1_DIRECCION]],
+  membership_L2[[ANCLA_2_TECNICO]],
+  membership_L2[[ANCLA_3_ANALITICO]],
+  membership_L2[[ANCLA_4_AGRO]]
+)
+stopifnot(
+  "Las 4 anclas deben caer en 4 comunidades distintas (revisar particion antes de continuar)" =
+    length(unique(id_original_de_ancla)) == 4,
+  "cluster_leiden/louvain debe devolver exactamente 4 comunidades para que el anclaje aplique" =
+    n_comunidades == 4
+)
+
+mapa_reordenamiento <- setNames(1:4, as.character(id_original_de_ancla))
+membership_L2 <- setNames(mapa_reordenamiento[as.character(membership_L2)], names(membership_L2))
+
+cat("\n  Anclaje por contenido aplicado (fix C2):\n")
+for (i in 1:4) {
+  cat(sprintf("    share_com%d = %s (ancla: %s)\n",
+              i, ETIQUETAS_COMUNIDAD[[as.character(i)]], anclas[i]))
+}
 
 cat(sprintf("  N. de comunidades: %d | Modularidad: %.4f\n",
             n_comunidades, modularity(red_rm$grafo, membership_L2, weights = E(red_rm$grafo)$weight)))
@@ -297,6 +359,203 @@ cat("  Este script no tiene el isco4 de ego armonizado. shares_rm queda\n")
 cat("  disponible para un left_join directo una vez que ese vector exista.\n")
 
 # =============================================================================
+# 5bis. CARACTERIZACION POR COMUNIDAD: n, ISEI implicito y phi intra
+# =============================================================================
+# NUEVO (18-ago-2026). Produce la tabla de caracterizacion de las 4 comunidades
+# que sustenta el hallazgo estructural: la comunidad Bio-ambiental-legal es
+# simultaneamente la mas cohesionada en habilidades (mayor phi intra) y la mas
+# dispersa en estatus (mayor DE de ISEI).
+#
+# IMPORTANTE -- por que el CA se re-estima aqui en vez de leer ca_coords.rds:
+# 03_ca_habilidades_isei.R guarda las coordenadas de las OCUPACIONES (filas),
+# no de las CATEGORIAS DE HABILIDAD (columnas), que es lo que hace falta para
+# el ISEI implicito por comunidad. Ademas, el signo de los ejes de un CA es
+# arbitrario entre corridas: si se entrenara la regresion isei~Dim1 con las
+# coordenadas de 03 y se aplicara a coordenadas de columna de otra corrida,
+# el ISEI implicito podria salir invertido sin ningun aviso. Por eso el CA se
+# corre aqui completo (misma matriz mat_rm, misma ponderacion poblacional que
+# 03) y la regresion se entrena y aplica DENTRO de esta misma geometria, que
+# es internamente consistente por construccion.
+#
+# ADVERTENCIA A DECLARAR AL REPORTAR: el ISEI por comunidad es IMPLICITO, no
+# medido. Se extrapola proyectando las categorias de habilidad sobre el eje
+# Dim1 y aplicando una regresion isei~Dim1 ajustada sobre solo 27 posiciones
+# del generador (R2 ~ 0.36). El contraste "mas cohesionada / mas dispersa en
+# estatus" tiene entonces una pata solida (phi, medido directo sobre la matriz
+# de complementariedad) y una debil (ISEI, extrapolado). Declararlo antes de
+# interpretar, no despues.
+
+cat("\n=== 5bis. CARACTERIZACION POR COMUNIDAD ===\n")
+
+# ── Pesos poblacionales por ocupacion, alineados fila a fila con mat_rm ─────
+pesos_rm <- rm_casen %>%
+  mutate(isco4_orig = suppressWarnings(as.integer(.data[[COL_ISCO_RM]])),
+         porcentaje = suppressWarnings(as.numeric(porcentaje))) %>%
+  left_join(corr_map, by = "isco4_orig") %>%
+  mutate(isco4 = coalesce(isco4_corr, isco4_orig)) %>%
+  filter(!is.na(isco4), !is.na(porcentaje)) %>%
+  group_by(isco4) %>%
+  summarise(porcentaje = sum(porcentaje), .groups = "drop")
+
+pesos_vec <- pesos_rm$porcentaje[match(as.integer(rownames(mat_rm)), pesos_rm$isco4)]
+
+stopifnot(
+  "Toda ocupacion de mat_rm debe tener peso poblacional CASEN-RM" =
+    !any(is.na(pesos_vec)),
+  "El vector de pesos debe alinear fila a fila con mat_rm" =
+    length(pesos_vec) == nrow(mat_rm)
+)
+
+# ── CA ponderado (misma especificacion que 03_ca_habilidades_isei.R) ────────
+ca_com <- FactoMineR::CA(mat_rm, ncp = 5, graph = FALSE, row.w = pesos_vec)
+
+coords_ocupacion <- as.data.frame(ca_com$row$coord) %>%
+  tibble::rownames_to_column("isco4") %>%
+  mutate(isco4 = as.integer(isco4)) %>%
+  rename(Dim1_occ = `Dim 1`, Dim2_occ = `Dim 2`)
+
+coords_habilidad <- as.data.frame(ca_com$col$coord) %>%
+  tibble::rownames_to_column("L2_code") %>%
+  rename(Dim1_skill = `Dim 1`, Dim2_skill = `Dim 2`)
+
+# ── Regresion isei ~ Dim1, entrenada sobre las 27 posiciones del generador ──
+gp_ca <- gp_crosswalk %>%
+  mutate(isco4 = suppressWarnings(as.integer(isco4)),
+         isei  = suppressWarnings(as.numeric(isei))) %>%
+  left_join(coords_ocupacion, by = "isco4") %>%
+  filter(!is.na(Dim1_occ), !is.na(isei))
+
+isei_from_dim1 <- lm(isei ~ Dim1_occ, data = gp_ca)
+r2_isei <- summary(isei_from_dim1)$r.squared
+r_dim1_isei <- cor(gp_ca$Dim1_occ, gp_ca$isei)
+
+cat(sprintf("  Regresion isei ~ Dim1 sobre %d posiciones GP: R2 = %.3f | r(Dim1, ISEI) = %.3f\n",
+            nrow(gp_ca), r2_isei, r_dim1_isei))
+cat(sprintf("  r(Dim2, ISEI) = %.3f (contraste: el segundo eje NO sigue el prestigio)\n",
+            cor(gp_ca$Dim2_occ, gp_ca$isei)))
+
+# ── phi intra-comunidad: media de phi entre pares DENTRO de cada comunidad ──
+# Se recalcula phi desde la misma matriz binaria B que uso la deteccion, para
+# garantizar que es exactamente la misma medida (no una aproximacion).
+phi_mat <- cor(red_rm$B, method = "pearson")
+diag(phi_mat) <- NA
+
+phi_intra_comunidad <- function(codigos) {
+  if (length(codigos) < 2) return(NA_real_)
+  sub <- phi_mat[codigos, codigos, drop = FALSE]
+  mean(sub[upper.tri(sub)], na.rm = TRUE)
+}
+
+# ── Tabla final de caracterizacion ─────────────────────────────────────────
+tabla_caracterizacion <- tibble(
+  L2_code   = names(membership_L2),
+  comunidad = as.integer(membership_L2)
+) %>%
+  left_join(coords_habilidad, by = "L2_code") %>%
+  mutate(isei_implicito = predict(isei_from_dim1,
+                                   newdata = data.frame(Dim1_occ = Dim1_skill))) %>%
+  group_by(comunidad) %>%
+  summarise(
+    etiqueta     = ETIQUETAS_COMUNIDAD[as.character(first(comunidad))],
+    n_categorias = n(),
+    isei_medio   = mean(isei_implicito, na.rm = TRUE),
+    isei_de      = sd(isei_implicito, na.rm = TRUE),
+    phi_intra    = phi_intra_comunidad(L2_code),
+    .groups = "drop"
+  ) %>%
+  arrange(comunidad)
+
+cat("\n  Caracterizacion de las 4 comunidades (particion Leiden/RM vigente):\n")
+print(as.data.frame(tabla_caracterizacion %>%
+                      mutate(across(c(isei_medio, isei_de, phi_intra), ~ round(.x, 3)))),
+      row.names = FALSE)
+
+write_csv(tabla_caracterizacion, po("caracterizacion_comunidades.csv"))
+
+# ── Verificacion explicita del hallazgo estructural ────────────────────────
+com_mas_cohesionada <- tabla_caracterizacion$etiqueta[which.max(tabla_caracterizacion$phi_intra)]
+com_mas_dispersa    <- tabla_caracterizacion$etiqueta[which.max(tabla_caracterizacion$isei_de)]
+
+cat(sprintf("\n  Comunidad mas COHESIONADA (mayor phi intra): %s\n", com_mas_cohesionada))
+cat(sprintf("  Comunidad mas DISPERSA en estatus (mayor DE de ISEI): %s\n", com_mas_dispersa))
+if (com_mas_cohesionada == com_mas_dispersa) {
+  cat("  -> El hallazgo estructural SE VERIFICA: la misma comunidad es la mas\n")
+  cat("     cohesionada en habilidades y la mas dispersa en prestigio.\n")
+} else {
+  cat("  -> ATENCION: el hallazgo NO se verifica en esta corrida. La comunidad\n")
+  cat("     mas cohesionada y la mas dispersa en estatus son distintas. Revisar\n")
+  cat("     antes de reportar el argumento de cohesion/dispersion.\n")
+}
+
+# =============================================================================
+# 6. MAPA DE RED: comunidades de habilidades segun Leiden/RM (NUEVO 18-ago-2026)
+# =============================================================================
+# Visualizacion de la red de complementariedad (phi, RCA>1) usada para la
+# deteccion de comunidades, coloreada por la particion YA ANCLADA por
+# contenido (fix C2, Seccion 3 de este mismo script) -- no la version antigua
+# de robustez/R4_deteccion_comunidades_L2_global.R, que corre Louvain sobre
+# el universo GLOBAL sin ponderar y por lo tanto no corresponde a los
+# resultados vigentes de la tesis. Este es el mapa que va en la presentacion.
+
+cat("\n=== 6. MAPA DE RED: comunidades Leiden/RM ===\n")
+
+COLORES_COMUNIDAD <- c(
+  "Direccion_servicio"          = "#173F8A",  # azul UC
+  "Tecnico_manual"              = "#E07B39",
+  "Analitico_digital_simbolico" = "#3A9B6F",
+  "Bio_ambiental_legal"         = "#B23A48"
+)
+
+grados_red <- degree(red_rm$grafo)
+
+nodos_red <- tibble(
+  L2_code   = names(grados_red),
+  grado     = grados_red,
+  comunidad = ETIQUETAS_COMUNIDAD[as.character(membership_L2[names(grados_red)])]
+)
+
+# Etiqueta textual corta para cada categoria (evita amontonar 110 nombres
+# largos ESCO encima de los nodos; solo se rotulan los mas conectados de
+# cada comunidad -- los mismos que ya identifica tabla_hubs mas arriba).
+nodos_a_rotular <- tabla_hubs |>
+  pull(L2_code) |>
+  unique()
+
+grafo_tidy <- as_tbl_graph(red_rm$grafo) |>
+  activate(nodes) |>
+  left_join(nodos_red, by = c("name" = "L2_code")) |>
+  mutate(mostrar_etiqueta = name %in% nodos_a_rotular)
+
+set.seed(2025)  # layout reproducible; no afecta la particion, solo el dibujo
+p_red_comunidades <- ggraph(grafo_tidy, layout = "fr") +
+  geom_edge_link(aes(width = weight), color = "grey85", alpha = 0.4, show.legend = FALSE) +
+  scale_edge_width(range = c(0.1, 1.2)) +
+  geom_node_point(aes(size = grado, color = comunidad), alpha = 0.85) +
+  geom_node_text(aes(label = ifelse(mostrar_etiqueta, name, "")),
+                  repel = TRUE, size = 3, color = "grey15", max.overlaps = 30) +
+  scale_color_manual(values = COLORES_COMUNIDAD, name = "Comunidad\n(Leiden, RM)") +
+  scale_size_continuous(range = c(2, 9), name = "Grado") +
+  labs(
+    title    = "Red de complementariedad de habilidades (phi, RCA>1)",
+    subtitle = sprintf("Particion Leiden sobre universo RM, %d categorias L2, modularidad %.3f",
+                        vcount(red_rm$grafo),
+                        modularity(red_rm$grafo, membership_L2, weights = E(red_rm$grafo)$weight))
+  ) +
+  theme_void(base_size = 12) +
+  theme(
+    plot.title    = element_text(face = "bold", size = 14, hjust = 0.5),
+    plot.subtitle = element_text(size = 10, hjust = 0.5, color = "grey40"),
+    legend.position = "bottom"
+  )
+
+ggsave(po("fig_red_comunidades_leiden_RM.png"), p_red_comunidades,
+       width = 12, height = 10, dpi = 300, bg = "white")
+
+cat("Guardado:", po("fig_red_comunidades_leiden_RM.png"), "\n")
+cat("(", vcount(red_rm$grafo), "nodos,", ecount(red_rm$grafo), "aristas,",
+    length(nodos_a_rotular), "categorias rotuladas -- las 5 mas conectadas por comunidad )\n")
+
+# =============================================================================
 # 8. RESUMEN Y EXPORTACION FINAL
 # =============================================================================
 
@@ -304,10 +563,13 @@ cat("\nArchivos generados en", po(""), ":\n")
 cat("  - hubs_por_comunidad.csv (insumo para bautizar las comunidades)\n")
 cat("  - shares_comunidad_generador_posiciones.csv (27 posiciones GP)\n")
 cat("  - shares_comunidad_casen_rm.csv (391 ocupaciones CASEN-RM, con etiqueta legible)\n")
+cat("  - fig_red_comunidades_leiden_RM.png (mapa de red, particion vigente)\n")
+cat("  - caracterizacion_comunidades.csv (n, ISEI implicito, phi intra por comunidad)\n")
 
 saveRDS(list(membership_L2 = membership_L2, shares_rm = shares_rm,
              gp_shares = gp_shares, n_comunidades = n_comunidades,
-             algoritmo_base = ALGORITMO_BASE),
+             algoritmo_base = ALGORITMO_BASE,
+             etiquetas_comunidad = ETIQUETAS_COMUNIDAD),
         po("imputacion_comunidades.rds"))
 
 cat("\n=== FIN: IMPUTACION DE COMUNIDADES A NIVEL DE OCUPACION ===\n")
@@ -347,4 +609,31 @@ cat("\n=== FIN: IMPUTACION DE COMUNIDADES A NIVEL DE OCUPACION ===\n")
 #     documentado (Paso 7), no ejecutado, porque este script no tiene acceso
 #     al isco4 de ego ya armonizado (vive en 01_preprocesar_encuesta.R). Se
 #     deja la funcion y el join listos para conectar directamente.
+# D6. NUEVO (fix C2, 2026-08-18). Los IDs de comunidad que devuelve igraph
+#     (cluster_leiden/cluster_louvain) son arbitrarios y pueden cambiar entre
+#     corridas sin que el contenido sustantivo de las comunidades cambie.
+#     Antes de este fix, share_com1..4 heredaba ese orden arbitrario
+#     directamente, y tanto 04_indicadores_red.R como
+#     18_modelos_habilidades_origen.R asumian en silencio que share_com1
+#     era siempre "Direccion-servicio", etc. -- un supuesto nunca verificado.
+#     Ahora membership_L2 se remapea ANTES de calcular shares_rm/gp_shares,
+#     usando la misma logica de anclaje por contenido ya validada en
+#     14_tabla_grados_completa.R (categorias ancla: S4.9 tomar decisiones ->
+#     comunidad 1 Direccion-servicio; 053 ciencias fisicas -> comunidad 2
+#     Tecnico-manual; S2.3 gestionar informacion -> comunidad 3
+#     Analitico-digital-simbolico; 081 agricultura -> comunidad 4
+#     Bio-ambiental-legal). Si en una corrida futura Leiden no encontrara
+#     exactamente 4 comunidades, o si dos anclas cayeran en la misma
+#     comunidad, el script se detiene con stop() en vez de exportar shares
+#     con etiquetas incorrectas. Las etiquetas quedan ademas guardadas
+#     explicitamente en imputacion_comunidades.rds (campo
+#     etiquetas_comunidad) para que cualquier script aguas abajo pueda
+#     verificarlas en vez de asumirlas.
+# D7. NUEVO (18-ago-2026, para presentacion a comision). Se agrega
+#     fig_red_comunidades_leiden_RM.png: mapa de la red de complementariedad
+#     coloreado por la particion Leiden/RM ya anclada (Seccion 6). No
+#     confundir con fig_red_comunidades_habilidades_alta_res.png, que
+#     produce robustez/R4_deteccion_comunidades_L2_global.R -- ese es
+#     Louvain sobre el universo GLOBAL, una particion de robustez/
+#     comparacion, no la que sustenta los resultados vigentes de la tesis.
 # =============================================================================
