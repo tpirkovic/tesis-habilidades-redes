@@ -19,7 +19,7 @@
 
 suppressPackageStartupMessages({
   library(dplyr); library(tidyr); library(readr); library(tibble); library(igraph)
-  library(ggplot2); library(ggraph); library(tidygraph)
+  library(ggplot2); library(ggraph); library(tidygraph); library(FactoMineR)
   library(ggrepel)      # repel de etiquetas de texto en el mapa de red (Seccion 6)
   library(graphlayouts) # layout "stress", mas legible que "fr" para redes densas
 })
@@ -361,6 +361,136 @@ cat("  Este script no tiene el isco4 de ego armonizado. shares_rm queda\n")
 cat("  disponible para un left_join directo una vez que ese vector exista.\n")
 
 # =============================================================================
+
+# =============================================================================
+# 5bis. CARACTERIZACION POR COMUNIDAD: n, ISEI implicito y phi intra
+# =============================================================================
+# NUEVO (18-ago-2026). Produce la tabla de caracterizacion de las 4 comunidades
+# que sustenta el hallazgo estructural: la comunidad Bio-ambiental-legal es
+# simultaneamente la mas cohesionada en habilidades (mayor phi intra) y la mas
+# dispersa en estatus (mayor DE de ISEI).
+#
+# IMPORTANTE -- por que el CA se re-estima aqui en vez de leer ca_coords.rds:
+# 03_ca_habilidades_isei.R guarda las coordenadas de las OCUPACIONES (filas),
+# no de las CATEGORIAS DE HABILIDAD (columnas), que es lo que hace falta para
+# el ISEI implicito por comunidad. Ademas, el signo de los ejes de un CA es
+# arbitrario entre corridas: si se entrenara la regresion isei~Dim1 con las
+# coordenadas de 03 y se aplicara a coordenadas de columna de otra corrida,
+# el ISEI implicito podria salir invertido sin ningun aviso. Por eso el CA se
+# corre aqui completo (misma matriz mat_rm, misma ponderacion poblacional que
+# 03) y la regresion se entrena y aplica DENTRO de esta misma geometria, que
+# es internamente consistente por construccion.
+#
+# ADVERTENCIA A DECLARAR AL REPORTAR: el ISEI por comunidad es IMPLICITO, no
+# medido. Se extrapola proyectando las categorias de habilidad sobre el eje
+# Dim1 y aplicando una regresion isei~Dim1 ajustada sobre solo 27 posiciones
+# del generador (R2 ~ 0.36). El contraste "mas cohesionada / mas dispersa en
+# estatus" tiene entonces una pata solida (phi, medido directo sobre la matriz
+# de complementariedad) y una debil (ISEI, extrapolado). Declararlo antes de
+# interpretar, no despues.
+
+cat("\n=== 5bis. CARACTERIZACION POR COMUNIDAD ===\n")
+
+# ── Pesos poblacionales por ocupacion, alineados fila a fila con mat_rm ─────
+pesos_rm <- rm_casen %>%
+  mutate(isco4_orig = suppressWarnings(as.integer(.data[[COL_ISCO_RM]])),
+         porcentaje = suppressWarnings(as.numeric(porcentaje))) %>%
+  left_join(corr_map, by = "isco4_orig") %>%
+  mutate(isco4 = coalesce(isco4_corr, isco4_orig)) %>%
+  filter(!is.na(isco4), !is.na(porcentaje)) %>%
+  group_by(isco4) %>%
+  summarise(porcentaje = sum(porcentaje), .groups = "drop")
+
+pesos_vec <- pesos_rm$porcentaje[match(as.integer(rownames(mat_rm)), pesos_rm$isco4)]
+
+stopifnot(
+  "Toda ocupacion de mat_rm debe tener peso poblacional CASEN-RM" =
+    !any(is.na(pesos_vec)),
+  "El vector de pesos debe alinear fila a fila con mat_rm" =
+    length(pesos_vec) == nrow(mat_rm)
+)
+
+# ── CA ponderado (misma especificacion que 03_ca_habilidades_isei.R) ────────
+ca_com <- FactoMineR::CA(mat_rm, ncp = 5, graph = FALSE, row.w = pesos_vec)
+
+coords_ocupacion <- as.data.frame(ca_com$row$coord) %>%
+  tibble::rownames_to_column("isco4") %>%
+  mutate(isco4 = as.integer(isco4)) %>%
+  rename(Dim1_occ = `Dim 1`, Dim2_occ = `Dim 2`)
+
+coords_habilidad <- as.data.frame(ca_com$col$coord) %>%
+  tibble::rownames_to_column("L2_code") %>%
+  rename(Dim1_skill = `Dim 1`, Dim2_skill = `Dim 2`)
+
+# ── Regresion isei ~ Dim1, entrenada sobre las 27 posiciones del generador ──
+gp_ca <- gp_crosswalk %>%
+  mutate(isco4 = suppressWarnings(as.integer(isco4)),
+         isei  = suppressWarnings(as.numeric(isei))) %>%
+  left_join(coords_ocupacion, by = "isco4") %>%
+  filter(!is.na(Dim1_occ), !is.na(isei))
+
+isei_from_dim1 <- lm(isei ~ Dim1_occ, data = gp_ca)
+r2_isei <- summary(isei_from_dim1)$r.squared
+r_dim1_isei <- cor(gp_ca$Dim1_occ, gp_ca$isei)
+
+cat(sprintf("  Regresion isei ~ Dim1 sobre %d posiciones GP: R2 = %.3f | r(Dim1, ISEI) = %.3f\n",
+            nrow(gp_ca), r2_isei, r_dim1_isei))
+cat(sprintf("  r(Dim2, ISEI) = %.3f (contraste: el segundo eje NO sigue el prestigio)\n",
+            cor(gp_ca$Dim2_occ, gp_ca$isei)))
+
+# ── phi intra-comunidad: media de phi entre pares DENTRO de cada comunidad ──
+# Se recalcula phi desde la misma matriz binaria B que uso la deteccion, para
+# garantizar que es exactamente la misma medida (no una aproximacion).
+phi_mat <- cor(red_rm$B, method = "pearson")
+diag(phi_mat) <- NA
+
+phi_intra_comunidad <- function(codigos) {
+  if (length(codigos) < 2) return(NA_real_)
+  sub <- phi_mat[codigos, codigos, drop = FALSE]
+  mean(sub[upper.tri(sub)], na.rm = TRUE)
+}
+
+# ── Tabla final de caracterizacion ─────────────────────────────────────────
+tabla_caracterizacion <- tibble(
+  L2_code   = names(membership_L2),
+  comunidad = as.integer(membership_L2)
+) %>%
+  left_join(coords_habilidad, by = "L2_code") %>%
+  mutate(isei_implicito = predict(isei_from_dim1,
+                                   newdata = data.frame(Dim1_occ = Dim1_skill))) %>%
+  group_by(comunidad) %>%
+  summarise(
+    etiqueta     = ETIQUETAS_COMUNIDAD[as.character(first(comunidad))],
+    n_categorias = n(),
+    isei_medio   = mean(isei_implicito, na.rm = TRUE),
+    isei_de      = sd(isei_implicito, na.rm = TRUE),
+    phi_intra    = phi_intra_comunidad(L2_code),
+    .groups = "drop"
+  ) %>%
+  arrange(comunidad)
+
+cat("\n  Caracterizacion de las 4 comunidades (particion Leiden/RM vigente):\n")
+print(as.data.frame(tabla_caracterizacion %>%
+                      mutate(across(c(isei_medio, isei_de, phi_intra), ~ round(.x, 3)))),
+      row.names = FALSE)
+
+write_csv(tabla_caracterizacion, po("caracterizacion_comunidades.csv"))
+
+# ── Verificacion explicita del hallazgo estructural ────────────────────────
+com_mas_cohesionada <- tabla_caracterizacion$etiqueta[which.max(tabla_caracterizacion$phi_intra)]
+com_mas_dispersa    <- tabla_caracterizacion$etiqueta[which.max(tabla_caracterizacion$isei_de)]
+
+cat(sprintf("\n  Comunidad mas COHESIONADA (mayor phi intra): %s\n", com_mas_cohesionada))
+cat(sprintf("  Comunidad mas DISPERSA en estatus (mayor DE de ISEI): %s\n", com_mas_dispersa))
+if (com_mas_cohesionada == com_mas_dispersa) {
+  cat("  -> El hallazgo estructural SE VERIFICA: la misma comunidad es la mas\n")
+  cat("     cohesionada en habilidades y la mas dispersa en prestigio.\n")
+} else {
+  cat("  -> ATENCION: el hallazgo NO se verifica en esta corrida. La comunidad\n")
+  cat("     mas cohesionada y la mas dispersa en estatus son distintas. Revisar\n")
+  cat("     antes de reportar el argumento de cohesion/dispersion.\n")
+}
+
 # 6. MAPA DE RED: comunidades de habilidades segun Leiden/RM (NUEVO 18-ago-2026)
 # =============================================================================
 # Visualizacion de la red de complementariedad (phi, RCA>1) usada para la
@@ -431,20 +561,68 @@ grafo_tidy <- as_tbl_graph(red_rm$grafo) |>
 # --- 6.2 Adelgazar aristas SOLO para el dibujo (no para el analisis) -------
 # La red completa (phi>0 entre las 110 categorias) satura visualmente
 # cualquier layout, y con TODOS los nodos ahora etiquetados el problema se
-# agrava: el texto necesita espacio libre. Se sube el umbral respecto de las
-# versiones anteriores (0.75 -> 0.85 -> 0.90 ahora) y se conserva solo el
-# 10% de aristas con mayor phi, unicamente para el render -- la deteccion de
-# comunidades de la Seccion 2-3 sigue usando la red completa.
-EDGE_PLOT_QUANTILE <- 0.90
-umbral_plot <- quantile(E(red_rm$grafo)$weight, EDGE_PLOT_QUANTILE)
+# agrava: el texto necesita espacio libre.
+#
+# FIX (18-ago-2026, d): un umbral GLOBAL de percentil de phi (como en las
+# revisiones anteriores) no garantiza que CADA nodo conserve al menos una
+# arista -- corta por un valor fijo de phi sin mirar nodo por nodo. Algunas
+# categorias (ej. "103 servicios de seguridad", "S6.12 lavar y mantener
+# textiles") tienen conexiones reales en red_rm$grafo, pero TODAS esas
+# conexiones caen por debajo del umbral global del percentil 90, asi que el
+# nodo queda sin ninguna arista visible y aparece "flotando" -- un artefacto
+# puro del renderizado, no de la red (en las versiones con percentil mas
+# bajo, 0.75/0.85, esto era menos probable porque se conservaba mas red en
+# total, pero el riesgo seguia latente).
+#
+# La solucion es la UNION de dos criterios, no uno solo:
+#   (a) el EDGE_PLOT_QUANTILE global de mayor phi (declutter general), y
+#   (b) para cada nodo, sus EDGE_TOP_K_POR_NODO aristas de mayor phi propias
+#       (un "backbone" minimo que garantiza conectividad nodo por nodo).
+# Esto es la tecnica estandar de "nearest-neighbor backbone" para dibujar
+# redes densas sin perder nodos perifericos. La deteccion de comunidades de
+# la Seccion 2-3 sigue usando la red completa; esto es solo para el dibujo.
+EDGE_PLOT_QUANTILE   <- 0.90
+EDGE_TOP_K_POR_NODO  <- 2
+
+edges_completas <- igraph::as_data_frame(red_rm$grafo, what = "edges") %>%
+  as_tibble() %>% mutate(edge_id = row_number())
+
+umbral_plot <- quantile(edges_completas$weight, EDGE_PLOT_QUANTILE)
+en_top_global <- edges_completas$edge_id[edges_completas$weight >= umbral_plot]
+
+# Para cada nodo, sus k aristas de mayor phi (viendo cada arista desde
+# ambos extremos, porque el grafo no es dirigido).
+vecinos_largo <- bind_rows(
+  edges_completas %>% transmute(nodo = from, edge_id, weight),
+  edges_completas %>% transmute(nodo = to,   edge_id, weight)
+)
+en_backbone_nodo <- vecinos_largo %>%
+  group_by(nodo) %>%
+  slice_max(order_by = weight, n = EDGE_TOP_K_POR_NODO, with_ties = FALSE) %>%
+  ungroup() %>% pull(edge_id) %>% unique()
+
+edge_ids_mantener <- union(en_top_global, en_backbone_nodo)
+mantener_arista <- edges_completas$edge_id %in% edge_ids_mantener
+
 grafo_tidy_plot <- grafo_tidy |>
   activate(edges) |>
-  filter(weight >= umbral_plot)
+  filter(mantener_arista)
 
-cat(sprintf("  Aristas mostradas en el mapa: %d de %d (percentil %.0f de phi, solo para renderizado)\n",
-            ecount(grafo_tidy_plot), ecount(red_rm$grafo), EDGE_PLOT_QUANTILE * 100))
-cat(sprintf("  Categorias rotuladas: %d de %d (todas)\n",
-            nrow(nodos_red), vcount(red_rm$grafo)))
+# Verificacion explicita: con el backbone por nodo, ningun nodo deberia
+# quedar sin al menos una arista en el dibujo. Si esto tronara, hay que
+# revisar si algun nodo del grafo tiene grado 0 incluso en la red completa
+# (deberia haber sido excluido antes, en construir_red_y_B()).
+grados_en_plot <- degree(grafo_tidy_plot)
+nodos_aislados_plot <- names(grados_en_plot)[grados_en_plot == 0]
+stopifnot(
+  "Quedan nodos sin ninguna arista en el mapa pese al backbone por nodo -- revisar EDGE_TOP_K_POR_NODO o si el nodo tiene grado 0 en red_rm$grafo" =
+    length(nodos_aislados_plot) == 0
+)
+
+cat(sprintf("  Aristas mostradas en el mapa: %d de %d (top %.0f%% global de phi + backbone de %d aristas por nodo, solo para renderizado)\n",
+            ecount(grafo_tidy_plot), ecount(red_rm$grafo), (1 - EDGE_PLOT_QUANTILE) * 100, EDGE_TOP_K_POR_NODO))
+cat(sprintf("  Categorias rotuladas: %d de %d (todas) | nodos sin arista visible: %d\n",
+            nrow(nodos_red), vcount(red_rm$grafo), length(nodos_aislados_plot)))
 
 set.seed(2025)  # layout reproducible; no afecta la particion, solo el dibujo
 p_red_comunidades <- ggraph(grafo_tidy_plot, layout = "stress") +
@@ -482,8 +660,8 @@ p_red_comunidades <- ggraph(grafo_tidy_plot, layout = "stress") +
       vcount(red_rm$grafo),
       modularity(red_rm$grafo, membership_L2, weights = E(red_rm$grafo)$weight)
     ),
-    caption = sprintf("Solo se dibuja el %.0f%% de aristas con mayor \u03c6 (declutter visual; la detecci\u00f3n de comunidades usa la red completa)",
-                       (1 - EDGE_PLOT_QUANTILE) * 100)
+    caption = sprintf("Se dibuja el top %.0f%% de aristas por \u03c6 + las %d m\u00e1s fuertes de cada nodo (garantiza que todos los nodos queden conectados) \u00b7 la detecci\u00f3n de comunidades usa la red completa",
+                       (1 - EDGE_PLOT_QUANTILE) * 100, EDGE_TOP_K_POR_NODO)
   ) +
   theme_void(base_size = 12) +
   theme(
@@ -521,12 +699,19 @@ cat("  - hubs_por_comunidad.csv (insumo para bautizar las comunidades)\n")
 cat("  - shares_comunidad_generador_posiciones.csv (27 posiciones GP)\n")
 cat("  - shares_comunidad_casen_rm.csv (391 ocupaciones CASEN-RM, con etiqueta legible)\n")
 cat("  - fig_red_comunidades_leiden_RM.png (mapa de red, particion vigente)\n")
+cat("  - caracterizacion_comunidades.csv (n, ISEI implicito, phi intra por comunidad)\n")
 
 saveRDS(list(membership_L2 = membership_L2, shares_rm = shares_rm,
              gp_shares = gp_shares, n_comunidades = n_comunidades,
              algoritmo_base = ALGORITMO_BASE,
-             etiquetas_comunidad = ETIQUETAS_COMUNIDAD),
+             etiquetas_comunidad = ETIQUETAS_COMUNIDAD,
+             grafo = red_rm$grafo, B = red_rm$B),
         po("imputacion_comunidades.rds"))
+# NUEVO (19-ago-2026, D11): se agrega el grafo phi (red_rm$grafo) y la matriz
+# binaria B al .rds exportado. Antes, robustez/R5_similitud_habilidades_red_vs_ca.R
+# reconstruia esta misma red desde cero (codigo duplicado). Ahora 04 y R5
+# cargan el grafo ya construido aqui -- fuente unica, igual que ya se hace
+# con correcciones_isco_casen.csv. Ver Decision D11 al final.
 
 cat("\n=== FIN: IMPUTACION DE COMUNIDADES A NIVEL DE OCUPACION ===\n")
 
@@ -634,4 +819,36 @@ cat("\n=== FIN: IMPUTACION DE COMUNIDADES A NIVEL DE OCUPACION ===\n")
 #          poster o anexo A3) en vez de reducir mas la fuente.
 #     leyenda_categorias_rotuladas.csv ahora exporta las 110 categorias (ya
 #     no un subconjunto de hubs), como diccionario completo codigo->nombre.
+# D10. NUEVO (18-ago-2026, d). Fix a un artefacto reportado tras D9: con
+#     EDGE_PLOT_QUANTILE como umbral GLOBAL de phi (top 10%), algunos nodos
+#     quedaban SIN NINGUNA arista dibujada -- no porque estuvieran aislados
+#     en la red real (red_rm$grafo), sino porque TODAS sus aristas
+#     individuales caian por debajo del umbral global. Un umbral global no
+#     garantiza minimo de grado por nodo, solo un total de aristas.
+#     Fix: el filtro de aristas del dibujo pasa a ser la UNION de (a) el top
+#     EDGE_PLOT_QUANTILE global por phi, y (b) para cada nodo, sus
+#     EDGE_TOP_K_POR_NODO=2 aristas propias de mayor phi (un "backbone"
+#     nodo-a-nodo que garantiza conectividad visible). Se agrega un
+#     stopifnot() explicito despues del filtro que verifica que ningun nodo
+#     quede con grado 0 en el grafico; si eso ocurriera, el script se
+#     detiene en vez de exportar una figura con nodos flotantes en silencio.
+#     Sigue siendo puramente de renderizado: la deteccion de comunidades de
+#     la Seccion 2-3 no se toca.
+# D11. NUEVO (19-ago-2026). imputacion_comunidades.rds ahora incluye el grafo
+#     phi (red_rm$grafo) y la matriz binaria B, ademas de membership_L2 y
+#     los shares. Motivo: SH_ip_red (distancia geodesica en la red phi,
+#     especificacion principal de H1b desde el 19-ago-2026) se calcula en
+#     04_indicadores_red.R a partir de este grafo. Antes de este cambio,
+#     robustez/R5_similitud_habilidades_red_vs_ca.R reconstruia la red
+#     completa por su cuenta (Secciones 1-2, verbatim de este script) solo
+#     para tener acceso al grafo -- duplicacion que ahora se elimina. 08
+#     sigue siendo la UNICA fuente que construye la red desde mat_rm.
+#     NOTA DE RECONCILIACION (20-ago-2026): esta linea de trabajo (fix de
+#     H1b/SH_ip_red, 19-ago) y la del rediseno del mapa de red (D8-D10,
+#     18-ago b/c/d) se desarrollaron en paralelo sobre copias distintas del
+#     mismo script y un push (commit 2a9eb11) sobrescribio la primera con la
+#     segunda sin fusionarlas -- Seccion 5bis y el export de grafo/B quedaron
+#     fuera del repo remoto pese a que la tesis (via SH_ip_red en 05) ya
+#     dependia de ellos. Este commit fusiona ambas lineas. Ver auditoria del
+#     20-ago-2026 para el detalle de como se detecto y reconstruyo.
 # =============================================================================
