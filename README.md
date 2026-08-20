@@ -29,9 +29,15 @@ lee sus insumos desde `output/intermediate/` y falla con un mensaje claro
 | 11 | `11_modelos_habilidades_origen.R` | Contraste total/directo H2-H3 (complementario a 05) | 04 |
 
 `robustez/` contiene los chequeos de sensibilidad (comparación Leiden vs.
-Louvain, bootstrap, nivel L3, MCA) — no forman parte del camino crítico,
-pero sustentan las decisiones metodológicas documentadas en cada script
-productivo.
+Louvain, bootstrap, nivel L3, MCA, comparación SH_ip vía CA vs. vía red de
+complementariedad) — no forman parte del camino crítico, pero sustentan las
+decisiones metodológicas documentadas en cada script productivo.
+
+`presentacion/` contiene el deck Quarto revealjs usado en la presentación de
+avance ante la comisión de tesis (19-ago-2026): fuente `.qmd`, tema
+`libs/tesis.scss` e imágenes. Es autocontenido y no tiene chunks de R
+ejecutables — las figuras se generan por separado desde `03` y `08` y se
+insertan como imagen estática.
 
 ## Hallazgo central
 
@@ -55,6 +61,10 @@ contenido de habilidades no es reductible a la similitud de prestigio.
   reportarse como finales — ver nota en `05_modelos.R`, Decisión 3.*
 - **H4 / H4b**: la clase de origen predice el cierre estructural de la red,
   moderado por el peso bio-ambiental-legal de la ocupación de ego.
+  ⚠️ *La presentación del 19-ago-2026 reporta solo H1, H1b, H2, H3, H4 (sin
+  H4b) y usa `SH_ip_red` — no `SH_ip` vía CA — como especificación principal
+  de H1b. Pendiente verificar si `05_modelos.R` ya refleja ambos cambios o
+  si esta tabla quedó desactualizada respecto al script.*
 
 ## Convenciones del pipeline
 
@@ -71,15 +81,30 @@ contenido de habilidades no es reductible a la similitud de prestigio.
 - Sin causal language en el texto de la tesis (diseño transversal): usar
   "se asocia con", "predice", "varía según"; nunca "efecto de", "impacto de".
 
-## Estado del pipeline (última auditoría: 18-ago-2026)
+## Estado del pipeline (última actualización: 19-ago-2026)
 
-Todos los bugs de cálculo detectados en la auditoría del 17/18-ago-2026 ya
-están corregidos en los scripts de este repo (CA ponderado por RM restaurado
-como fuente única, indexación de `Rango_P`/`Estatus_Max` por `match()`,
-verificación de completitud de shares de red, anclaje por contenido de
-comunidades, seed del bootstrap fuera del loop). El detalle completo de cada
-bug y su corrección está documentado en los comentarios de cabecera y en el
-bloque `DECISIONES METODOLÓGICAS` al final de cada script afectado.
+Los bugs de cálculo detectados en la auditoría del 17/18-ago-2026 están
+corregidos en los scripts de este repo (CA ponderado por RM restaurado como
+fuente única, indexación de `Rango_P`/`Estatus_Max` por `match()`,
+verificación de completitud de shares de red, seed del bootstrap fuera del
+loop). El detalle completo de cada bug y su corrección está documentado en
+los comentarios de cabecera y en el bloque `DECISIONES METODOLÓGICAS` al
+final de cada script afectado.
+
+**Corrección al estado anterior de este README:** el anclaje por contenido
+de comunidades (fix C2) figuraba como ya corregido desde el push inicial
+(18-ago-2026), pero `08_comunidades_por_ocupacion.R` no incluía esa
+corrección en ese commit. El fix se aplicó efectivamente el 19-ago-2026
+(commit `8195e43`): `membership_L2` ahora se remapea por categorías ancla
+antes de calcular `shares_rm`/`gp_shares`, con `stopifnot()` de verificación
+si Leiden no devuelve exactamente 4 comunidades o si dos anclas caen en la
+misma. Cualquier resultado de `share_com1..4` generado con una corrida
+anterior a ese commit debe considerarse no anclado por contenido.
 
 Pendiente antes de redactar resultados finales de H3: resolver la
 composicionalidad de los 4 shares (ver arriba).
+
+Pendiente antes de redactar resultados finales de H1/H1b: confirmar si
+`04_indicadores_red.R` y `05_modelos.R` ya incorporan `SH_ip_red` (distancia
+geodésica en la red de complementariedad) como especificación principal, en
+vez de `SH_ip` vía coordenadas CA — ver `robustez/R5_similitud_habilidades_red_vs_ca.R`.
