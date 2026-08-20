@@ -1,6 +1,6 @@
 # =============================================================================
 # 05_modelos.R
-# Etapa 5 del pipeline: modelos estadísticos H1/H1b, H2, H3, H4 y H4b.
+# Etapa 5 del pipeline: modelos estadísticos H1/H1b, H2, H3 y H4.
 # Tesis Magíster en Sociología — PUC Chile | Trajan Pirkovic Palma
 #
 # VERSIÓN ACTUALIZADA (agosto 2026). Cambios respecto a la versión anterior:
@@ -12,7 +12,6 @@
 #   - H3 se reformula: 4 modelos paralelos de share de comunidad, con
 #     SP_red_ego (homofilia de prestigio ego-red) como contraste crítico.
 #   - H4 (nueva): clase de origen -> cierre estructural blando.
-#   - H4b (nueva): interacción con el peso bio-ambiental-legal de ego.
 #   - Se elimina el modelo de ingreso (H4 original, descartada del diseño).
 #   - Se agrega un chequeo de colinealidad previo a la interpretación de H4.
 #
@@ -21,16 +20,22 @@
 # principal de H1/H1b -- ver Decisión 8. Requiere base_larga.rds regenerado
 # con 04_indicadores_red.R actualizado (Acción 6b).
 #
-# VALIDADO (19-ago-2026) sobre base_larga.rds/df_ego.rds regenerados con
-# SH_ip_red (fix D8/Decisión 10 de 04_indicadores_red.R). Resultados:
+# CAMBIO (20-ago-2026): H4b (moderación por peso bio-ambiental-legal de ego)
+# se retira del pipeline a pedido del investigador -- ver nota en la sección
+# de H4. H2 y H4 pasan a usar ISEI_orig_hat (no educación) como IV focal,
+# con el mismo bloque de controles, y educ_f5 (5 categorías colapsadas, ver
+# Decisión 12) en vez de la versión continua o la de 10 niveles.
+#
+# ESTADO ACTUAL (20-ago-2026) sobre base_larga.rds/df_ego.rds regenerados:
 # H1 se sostiene (SH_ip_sc = 0.199*** en M2, controlando SP_ip_sc); H1b se
 # sostiene (interacción SH_ip_sc:educ_sc = -0.061***, n=26.325 díadas/975
-# egos); H2 no se sostiene (ISEI_orig_hat n.s. sobre Div_Red, p=0.190;
-# predice Rango_P); H3 se sostiene en las 4 comunidades, SP_red_ego n.s. en
-# las cuatro (n=931); H4 lineal y cuadrático con ISEI_orig_hat n.s., pero
-# educ sí predice cierre_blando (-0.0070***); H4b: share_com4_ego predice
-# cierre_blando directo (-0.611***) pero la interacción con ISEI_orig_hat es
-# n.s. (p=0.197). Ver README.md para la lectura completa.
+# egos). H2 y H4: el efecto DIRECTO de ISEI_orig_hat (controlando por
+# educ_f5) no es significativo, pero el efecto en su forma BIVARIADA sí lo es
+# y cae ~88% (H2) / ~64% (H4) justo al entrar educ_f5 -- evidencia
+# descriptiva de mediación vía educación (origen -> educación -> destino),
+# no de ausencia de efecto (ver tabla_h2_escalon/tabla_h4_escalon y Decisión
+# 11). H3 se sostiene en las 4 comunidades, SP_red_ego n.s. en las cuatro
+# (n=931). Ver README.md para la lectura completa.
 #
 # PENDIENTE (ver README.md): H3 corre como 4 svyglm independientes sobre
 # datos composicionales (los 4 shares suman 1) -- válido para exploración,
@@ -113,7 +118,45 @@ print(anova(M0, M1, M2))
 
 df_ego <- df_ego_raw |>
   filter(!is.na(Div_Red), !is.na(ISEI_orig_hat), !is.na(educ)) |>
-  mutate(sexo = factor(sexo))
+  mutate(
+    sexo = factor(sexo),
+    # DECISIÓN 9 (superada, ver DECISIÓN 13): educ pasaba de continua a
+    # factor no ordenado de 10 niveles (educ_f). Se mantiene la columna por
+    # si se necesita de respaldo, pero YA NO se usa en H2/H4 -- ver abajo.
+    educ_f = factor(educ, levels = sort(unique(educ)))
+  )
+df_ego$educ_f <- relevel(df_ego$educ_f, ref = as.character(min(df_ego$educ, na.rm = TRUE)))
+
+# DECISIÓN 13 (20-ago-2026). educ_f (10 niveles) tiene una categoría de
+# referencia con n=3 ("Sin estudios") y dos categorías más con n<30 (técnica
+# superior incompleta, n=27; posgrado, n=18) -- table(df_ego$educ_f):
+# 3/33/51/93/380/27/130/37/206/18. Eso infla artificialmente los errores
+# estándar de TODAS las comparaciones contra la referencia, produciendo la
+# apariencia de "sin diferencias por educación" en H4 y comparaciones débiles
+# en H2 que no reflejan necesariamente ausencia de efecto real (ver
+# conversación 20-ago-2026). Se colapsa a 5 categorías sustantivamente
+# sensatas, ninguna con n<37, con "Básica o menos" como referencia (n=87):
+#   Básica o menos            (niveles 1+2+3,  n=87)
+#   Media                     (niveles 4+5,    n=473)
+#   Técnica superior          (niveles 6+7,    n=157)
+#   Universitaria incompleta  (nivel 8,        n=37)
+#   Universitaria completa+   (niveles 9+10,   n=224)
+# # Reemplaza a educ_f en H2, H4 y el escalonamiento de controles. H1/H1b
+# NO se tocan (mantienen educ_sc continua). H3 tampoco se toca en este
+# cambio (sigue con educ continua -- inconsistencia declarada, no resuelta).
+df_ego <- df_ego |>
+  mutate(
+    educ_f5 = case_when(
+      educ %in% c(1, 2, 3) ~ "1. Basica o menos",
+      educ %in% c(4, 5)    ~ "2. Media",
+      educ %in% c(6, 7)    ~ "3. Tecnica superior",
+      educ == 8            ~ "4. Universitaria incompleta",
+      educ %in% c(9, 10)   ~ "5. Universitaria completa+"
+    ),
+    educ_f5 = factor(educ_f5)
+  )
+cat("\nDistribución de educ_f5 (colapsada):\n")
+print(table(df_ego$educ_f5))
 
 cat("\nn base ego:", nrow(df_ego), "\n")
 
@@ -149,15 +192,29 @@ svy_ego <- svydesign(ids = ~1, weights = ~weight, data = df_ego)
 # hipótesis direccional del tipo "a menor origen, menor orientación".
 # Ver DECISIÓN 2.
 
-H2_div <- svyglm(Div_Red ~ ISEI_orig_hat + educ + sexo + edad +
+H2_div <- svyglm(Div_Red ~ ISEI_orig_hat + educ_f5 + sexo + edad +
                    Ext + Rango_P + Estatus_Max,
                  design = svy_ego, family = gaussian())
 
 cat("\n=== H2: Clase de origen -> Diversidad de habilidades de la red ===\n")
 print(summary(H2_div))
 
+# NUEVO (20-ago-2026): especificación reducida, SIN Ext/Rango_P/Estatus_Max.
+# Motivo: esas tres son variables de la RED de ego, del mismo nivel que la DV
+# (Div_Red), no atributos previos como educ/sexo/edad -- si el origen de
+# clase opera vía cuánto se extiende o cuán alto llega en prestigio la red,
+# controlar por ellas resta exactamente ese canal (sesgo de "bad control").
+# Rango_P y Estatus_Max además correlacionan 0.685/0.637 con Div_Red (ver
+# mat_cor) -- son parientes cercanos de la propia DV. Se reportan ambas
+# versiones, no se reemplaza la original, para comparar si el resultado de
+# ISEI_orig_hat depende de esta decisión. Ver DECISIÓN 10.
+H2_div_red <- svyglm(Div_Red ~ ISEI_orig_hat + educ_f5 + sexo + edad,
+                      design = svy_ego, family = gaussian())
+cat("\n--- H2, forma reducida (sin Ext/Rango_P/Estatus_Max) ---\n")
+print(summary(H2_div_red))
+
 # descriptivo de Orient_ego (ya no es hipótesis, se reporta como descripción)
-H2_orient_desc <- svyglm(Orient_ego ~ ISEI_orig_hat + educ + sexo + edad,
+H2_orient_desc <- svyglm(Orient_ego ~ ISEI_orig_hat + educ_f5 + sexo + edad,
                           design = svy_ego, family = gaussian())
 cat("\n--- Descriptivo (NO hipótesis): origen -> Orient_ego ---\n")
 print(summary(H2_orient_desc))
@@ -199,10 +256,18 @@ svy_H4 <- svydesign(ids = ~1, weights = ~weight, data = df_H4)
 
 cat(sprintf("\n=== H4: Clase de origen -> Cierre estructural (n = %d) ===\n", nrow(df_H4)))
 
-H4_lineal <- svyglm(cierre_blando ~ ISEI_orig_hat + educ + sexo + edad +
+H4_lineal <- svyglm(cierre_blando ~ ISEI_orig_hat + educ_f5 + sexo + edad +
                       Ext + Rango_P + Estatus_Max,
                     design = svy_H4, family = gaussian())
 print(summary(H4_lineal))
+
+# NUEVO (20-ago-2026): forma reducida, sin Ext/Rango_P/Estatus_Max -- mismo
+# argumento que en H2 (ver DECISIÓN 10): son variables de la red de ego, del
+# mismo nivel que cierre_blando, no controles previos.
+H4_lineal_red <- svyglm(cierre_blando ~ ISEI_orig_hat + educ_f5 + sexo + edad,
+                         design = svy_H4, family = gaussian())
+cat("\n--- H4, forma reducida (sin Ext/Rango_P/Estatus_Max) ---\n")
+print(summary(H4_lineal_red))
 
 # ROBUSTEZ: especificación cuadrática. Otero, Völker y Rözer (2021) documentan
 # que la segregación de redes en Chile sigue una forma de U a lo largo de la
@@ -213,29 +278,67 @@ df_H4$ISEI_orig_c  <- df_H4$ISEI_orig_hat - mean(df_H4$ISEI_orig_hat, na.rm = TR
 df_H4$ISEI_orig_c2 <- df_H4$ISEI_orig_c^2
 svy_H4 <- svydesign(ids = ~1, weights = ~weight, data = df_H4)
 
-H4_cuadratico <- svyglm(cierre_blando ~ ISEI_orig_c + ISEI_orig_c2 + educ + sexo + edad +
+H4_cuadratico <- svyglm(cierre_blando ~ ISEI_orig_c + ISEI_orig_c2 + educ_f5 + sexo + edad +
                           Ext + Rango_P + Estatus_Max,
                         design = svy_H4, family = gaussian())
 cat("\n--- H4, robustez: especificación cuadrática (forma de U) ---\n")
 print(summary(H4_cuadratico))
 
-# =============================================================================
-# H4b — MODERACIÓN POR PESO BIO-AMBIENTAL-LEGAL DE LA OCUPACIÓN DE EGO
-# =============================================================================
-# ADVERTENCIA A DECLARAR EN EL TEXTO: share_com4_ego está fuertemente
-# concentrada cerca de cero (solo 1 de 978 egos tiene esa comunidad como
-# dominante). La interacción se estima sobre la variable CONTINUA, no sobre
-# grupos, precisamente para evitar el problema de tamaño de grupo, pero la
-# potencia sigue siendo limitada. Ver DECISIÓN 6.
+# NOTA (20-ago-2026): H4b (moderación por peso bio-ambiental-legal de ego)
+# se retira del pipeline a pedido del investigador. Ya no se ajusta ni se
+# guarda en modelos.rds. El código y las decisiones metodológicas asociadas
+# (antigua Decisión 6) se archivan en el historial de versiones de git, no
+# aquí, para no dejar código muerto en el script activo.
 
-cat("\n=== H4b: Moderación por peso bio-ambiental-legal ===\n")
-cat("\n  Distribución de share_com4_ego:\n")
-print(summary(df_H4$share_com4_ego))
+# =============================================================================
+# ESCALONAMIENTO DE CONTROLES — H2 y H4
+# =============================================================================
+# NUEVO (20-ago-2026). En vez de comparar solo "con todos los controles" vs.
+# "sin ninguno" (H2_div/H4_lineal vs. H2_div_red/H4_lineal_red), se agregan
+# los controles UNO A UNO para ver en qué paso exacto se mueve el coeficiente
+# de ISEI_orig_hat. Rango_P y Estatus_Max correlacionan 0.945 entre sí (ver
+# mat_cor) -- entran en pasos separados para poder atribuir el movimiento a
+# uno u otro, no a ambos a la vez. La muestra se fija (complete cases sobre
+# TODAS las variables del modelo completo) para que n no cambie entre pasos
+# y las comparaciones sean limpias.
 
-H4b <- svyglm(cierre_blando ~ ISEI_orig_hat * share_com4_ego + educ + sexo + edad +
-                Ext + Rango_P + Estatus_Max,
-              design = svy_H4, family = gaussian())
-print(summary(H4b))
+extraer_isei <- function(formula_str, design, iv = "ISEI_orig_hat") {
+  m  <- svyglm(as.formula(formula_str), design = design, family = gaussian())
+  co <- summary(m)$coefficients
+  tibble(b = co[iv, "Estimate"], se = co[iv, "Std. Error"], p = co[iv, "Pr(>|t|)"])
+}
+
+correr_escalonamiento <- function(dv, df, pasos, titulo) {
+  vars_todas  <- c("ISEI_orig_hat", "educ_f5", "sexo", "edad",
+                    "Ext", "Rango_P", "Estatus_Max", dv, "weight")
+  df_esc  <- df |> filter(if_all(all_of(vars_todas), ~ !is.na(.x)))
+  svy_esc <- svydesign(ids = ~1, weights = ~weight, data = df_esc)
+  cat(sprintf("\n=== ESCALONAMIENTO %s (n = %d, fijo en todos los pasos) ===\n",
+              titulo, nrow(df_esc)))
+  tabla <- purrr::imap_dfr(pasos, ~ bind_cols(paso = .y, extraer_isei(.x, svy_esc)))
+  print(tabla, n = nrow(tabla))
+  tabla
+}
+
+pasos_h2 <- list(
+  "1. Solo ISEI origen"                   = "Div_Red ~ ISEI_orig_hat",
+  "2. + educacion"                        = "Div_Red ~ ISEI_orig_hat + educ_f5",
+  "3. + sexo y edad"                      = "Div_Red ~ ISEI_orig_hat + educ_f5 + sexo + edad",
+  "4. + extension de red (Ext)"           = "Div_Red ~ ISEI_orig_hat + educ_f5 + sexo + edad + Ext",
+  "5. + rango de prestigio (Rango_P)"     = "Div_Red ~ ISEI_orig_hat + educ_f5 + sexo + edad + Ext + Rango_P",
+  "6. + estatus maximo (modelo completo)" = "Div_Red ~ ISEI_orig_hat + educ_f5 + sexo + edad + Ext + Rango_P + Estatus_Max"
+)
+tabla_h2_escalon <- correr_escalonamiento("Div_Red", df_ego, pasos_h2, "H2 (Div_Red)")
+
+pasos_h4 <- list(
+  "1. Solo ISEI origen"                   = "cierre_blando ~ ISEI_orig_hat",
+  "2. + educacion"                        = "cierre_blando ~ ISEI_orig_hat + educ_f5",
+  "3. + sexo y edad"                      = "cierre_blando ~ ISEI_orig_hat + educ_f5 + sexo + edad",
+  "4. + extension de red (Ext)"           = "cierre_blando ~ ISEI_orig_hat + educ_f5 + sexo + edad + Ext",
+  "5. + rango de prestigio (Rango_P)"     = "cierre_blando ~ ISEI_orig_hat + educ_f5 + sexo + edad + Ext + Rango_P",
+  "6. + estatus maximo (modelo completo)" = "cierre_blando ~ ISEI_orig_hat + educ_f5 + sexo + edad + Ext + Rango_P + Estatus_Max"
+)
+tabla_h4_escalon <- correr_escalonamiento("cierre_blando", df_H4, pasos_h4, "H4 (cierre_blando)")
 
 # =============================================================================
 # GUARDAR
@@ -243,9 +346,11 @@ print(summary(H4b))
 
 saveRDS(
   list(M0 = M0, M1 = M1, M2 = M2,
-       H2_div = H2_div, H2_orient_desc = H2_orient_desc,
+       H2_div = H2_div, H2_div_red = H2_div_red, H2_orient_desc = H2_orient_desc,
        H3_modelos = H3_modelos,
-       H4_lineal = H4_lineal, H4_cuadratico = H4_cuadratico, H4b = H4b,
+       H4_lineal = H4_lineal, H4_lineal_red = H4_lineal_red,
+       H4_cuadratico = H4_cuadratico,
+       tabla_h2_escalon = tabla_h2_escalon, tabla_h4_escalon = tabla_h4_escalon,
        mat_cor = mat_cor,
        bl_m = bl_m, df_ego = df_ego, df_H3 = df_H3, df_H4 = df_H4,
        tiene_tamgrupo = tiene_tamgrupo),
@@ -298,12 +403,12 @@ cat("=== FIN ETAPA 05 ===\n")
 #    positivo y significativo. ISEI de origen se centra antes de elevar al
 #    cuadrado, para reducir colinealidad entre el término lineal y el
 #    cuadrático.
-# 6. H4b usa share_com4_ego CONTINUA como moderadora, no la comunidad
-#    dominante categórica. Razón: solo 1 de 978 egos tiene la comunidad
-#    bio-ambiental-legal como dominante, lo que hace inviable un análisis por
-#    grupos. La variable continua evita ese problema, pero la distribución
-#    sigue concentrada cerca de cero y la potencia es limitada: debe
-#    declararse en el texto antes de interpretar el resultado, no después.
+# 6. RETIRADA (20-ago-2026, ver Decisión 14). Especificaba que H4b usaba
+#    share_com4_ego continua como moderadora en vez de la comunidad dominante
+#    categórica, por baja prevalencia de esa comunidad como dominante (1 de
+#    978 egos). Ya no aplica: H4b se retiró del pipeline. Se mantiene el
+#    número de decisión para no romper referencias cruzadas de otros
+#    documentos (README.md, informes previos).
 # 7. Se elimina el modelo de ingreso (H4 original del Informe 3). Decisión del
 #    investigador: esa pregunta pasa a otra investigación. El Informe 3 ya la
 #    trataba como exploratoria por las advertencias de Mouw (2003) sobre
@@ -323,4 +428,73 @@ cat("=== FIN ETAPA 05 ===\n")
 #    era una reconstrucción aproximada de robustez/R5, con variables sin
 #    escalar y sin pendiente aleatoria -- ver Decisión 6 de R5 y Decisión 10
 #    de 04_indicadores_red.R).
+# 9. NUEVO (20-ago-2026). H2 y H4 pasan a compartir exactamente el mismo
+#    bloque de controles individuales (educ_f + sexo + edad), con ISEI_orig_hat
+#    como IV focal en ambas -- ya era el caso antes de este cambio; lo único
+#    que se modifica es la forma funcional de educ, que pasa de continua a
+#    factor no ordenado (educ_f), con el nivel más bajo como referencia. Esto
+#    responde a que la relación entre origen de clase y composición de red
+#    puede no ser lineal en los niveles educativos (mismo criterio ya usado
+#    en tesis.pdf para justificación de violencia con datos ELSOC). H1/H1b
+#    NO se tocan: mantienen educ_sc continua estandarizada, porque ahí educ
+#    entra como moderador en una interacción, no como control aditivo, y el
+#    diseño de Espinosa-Rada et al. (2026) que se sigue para H1 especifica
+#    la forma continua. H3 tampoco se toca en este cambio: sigue con educ
+#    continua -- queda como inconsistencia declarada pendiente de decisión,
+#    no un descuido (ver README.md / conversación 20-ago-2026).
+# 10. NUEVO (20-ago-2026). Se agregan H2_div_red y H4_lineal_red: mismas
+#     hipótesis, sin Ext/Rango_P/Estatus_Max como controles. Motivo: esas
+#     tres son variables de la RED de ego, del mismo nivel que las DV
+#     (Div_Red, cierre_blando), no atributos previos como educ/sexo/edad. Si
+#     el origen de clase opera sobre la composición de la red PRECISAMENTE a
+#     través de cuánto se extiende o cuán alto llega en prestigio, controlar
+#     por ellas resta ese canal (sesgo de "bad control" / control por
+#     mediador). Rango_P y Estatus_Max además correlacionan 0.685 y 0.637 con
+#     Div_Red (ver mat_cor) -- son parientes cercanos de la propia DV, no
+#     confusores externos a ella. No se reemplazan los modelos originales:
+#     se reportan ambas especificaciones para poder comparar si el resultado
+#     de ISEI_orig_hat depende de esta decisión de control. PENDIENTE: decidir
+#     cuál va al cuerpo principal de la tesis y cuál a anexo de robustez.
+# 11. NUEVO (20-ago-2026). Escalonamiento de controles para H2 y H4: se agregan
+#     de a uno (educ_f -> sexo/edad -> Ext -> Rango_P -> Estatus_Max) sobre una
+#     muestra fija (complete cases del modelo completo), para ver en qué paso
+#     exacto se mueve el coeficiente y el p-valor de ISEI_orig_hat, en vez de
+#     solo comparar el modelo completo contra el reducido de la Decisión 10.
+#     Rango_P y Estatus_Max entran en pasos separados porque correlacionan
+#     0.945 entre sí -- juntarlos en un mismo paso no permite saber a cuál
+#     de los dos atribuir el cambio.
+# 12. NUEVO (20-ago-2026). educ_f (10 niveles) se reemplaza por educ_f5 (5
+#     niveles colapsados) en H2, H4 y el escalonamiento de controles.
+#     Motivo: table(df_ego$educ_f) mostró que la categoría de referencia
+#     ("Sin estudios") tenía n=3, y dos categorías más n<30 (técnica superior
+#     incompleta, n=27; posgrado, n=18). Toda comparación contra una
+#     referencia de n=3 tiene un error estándar artificialmente inflado, lo
+#     que puede producir apariencia de "sin efecto de educación" (como se vio
+#     en H4) sin que eso refleje ausencia de efecto real -- es un problema de
+#     potencia estadística, no de especificación. educ_f5 colapsa a: Básica o
+#     menos (n=87, referencia), Media (n=473), Técnica superior (n=157),
+#     Universitaria incompleta (n=37), Universitaria completa o posgrado
+#     (n=224) -- ningún grupo con n<37. Los cortes siguen las categorías
+#     naturales de Q40 (básica/media/técnica/universitaria) y el quiebre
+#     sustantivo observado en la corrida anterior con 10 niveles (la
+#     significancia en H2 aparecía justo al completar estudios
+#     post-secundarios). H1/H1b y H3 NO se tocan (ver Decisión 9).
+# 13. NUEVO (20-ago-2026). Con educ_f5, el escalonamiento (tabla_h2_escalon/
+#     tabla_h4_escalon) confirma el patrón visto con educ_f de 10 niveles:
+#     ISEI_orig_hat cae de b=0.00855*** (paso 1, sin controles) a b=0.00104
+#     n.s. (paso 2, +educ_f5) en H2 -- caída ~88% -- y de b=-0.00076*** a
+#     b=-0.000277 (p=0.069) en H4 -- caída ~64%. Prácticamente idéntico a las
+#     caídas de ~89%/~66% con 10 niveles. Esto descarta que la mediación
+#     observada fuera un artefacto de la categorización anterior: con la
+#     medición de educación corregida (categorías con n suficiente), el
+#     patrón de mediación vía educación se mantiene.
+# 14. NUEVO (20-ago-2026). H4b (interacción ISEI_orig_hat × share_com4_ego)
+#     se retira del pipeline a pedido del investigador. Ya no se ajusta, no
+#     se imprime, y no se guarda en modelos.rds. Motivo declarado: no es una
+#     decisión metodológica (el modelo no tenía errores) sino de alcance --
+#     H4b no forma parte del cuerpo de hipótesis que se reporta. Ver
+#     Decisión 6 (retirada) para el detalle de la especificación que tenía.
+#     06_visualizaciones.R y 07_lectura_resultados.R deben actualizarse en
+#     consecuencia: quitar Figura 7, la columna H4b de la tabla modelsummary,
+#     y el PASO 6 completo.
 # =============================================================================

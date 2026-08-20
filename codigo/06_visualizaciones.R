@@ -1,6 +1,6 @@
 # =============================================================================
 # 06_visualizaciones.R
-# Etapa 6 del pipeline: visualización de resultados de H1/H1b, H2, H3, H4, H4b.
+# Etapa 6 del pipeline: visualización de resultados de H1/H1b, H2, H3, H4.
 # Tesis Magíster en Sociología — PUC Chile | Trajan Pirkovic Palma
 #
 # AUTOCONTENIDO: lee intermediate/modelos.rds (etapa 05). No re-estima nada.
@@ -63,18 +63,40 @@ ETIQ <- c(
   SP_ip_sc = "Similitud de prestigio (ego-posición)",
   SH_ip_sc = "Similitud de habilidades (ego-posición)",
   logTam_sc = "Tamaño del grupo ocupacional (log)",
-  educ_sc = "Educación", edad_sc = "Edad", sexo_fMujer = "Mujer",
+  educ_sc = "Educación (continua, H1/H1b)", edad_sc = "Edad", sexo_fMujer = "Mujer",
   `SH_ip_sc:educ_sc` = "Similitud habilidades × Educación",
-  ISEI_orig_hat = "ISEI de origen", educ = "Educación", edad = "Edad",
+  ISEI_orig_hat = "ISEI de origen", edad = "Edad",
+  # educ_f5 (H2/H4, DECISIÓN 12 de 05_modelos.R): factor de 5 categorías
+  # colapsadas (reemplaza a educ_f de 10 niveles, cuya referencia tenía
+  # n=3). svyglm genera un término por nivel no-referencia, con el nombre
+  # del nivel concatenado (p.ej. "educ_f52. Media"). `etiquetar_educ_f5()`
+  # abajo los traduce dinámicamente.
   sexoMujer = "Mujer", Ext = "Extensión de la red",
   Rango_P = "Rango de prestigio", Estatus_Max = "Estatus máximo",
   SP_red_ego = "Homofilia de prestigio ego-red",
   ISEI_orig_c = "ISEI de origen (centrado)",
-  ISEI_orig_c2 = "ISEI de origen² (centrado)",
-  share_com4_ego = "Peso bio-ambiental-legal (ego)",
-  `ISEI_orig_hat:share_com4_ego` = "ISEI origen × Peso bio-ambiental-legal"
+  ISEI_orig_c2 = "ISEI de origen² (centrado)"
 )
-etiquetar <- function(x) ifelse(x %in% names(ETIQ), ETIQ[x], x)
+# Q40 colapsada a 5 categorías (DECISIÓN 12 de 05_modelos.R, 20-ago-2026):
+# la categoría de referencia de educ_f (10 niveles) tenía n=3 ("Sin
+# estudios"), lo que inflaba artificialmente los errores estándar de todas
+# las comparaciones. educ_f5 agrupa: Básica o menos (ref.), Media, Técnica
+# superior, Universitaria incompleta, Universitaria completa o posgrado.
+ROTULOS_EDUC_F5 <- c(
+  "2. Media"                    = "Media",
+  "3. Tecnica superior"         = "Técnica superior",
+  "4. Universitaria incompleta" = "Universitaria incompleta",
+  "5. Universitaria completa+"  = "Universitaria completa o posgrado"
+)
+etiquetar_educ_f5 <- function(x) {
+  nivel <- sub("^educ_f5", "", x)
+  ifelse(nivel %in% names(ROTULOS_EDUC_F5),
+         paste0("Educación: ", ROTULOS_EDUC_F5[nivel]), x)
+}
+etiquetar <- function(x) {
+  x <- ifelse(x %in% names(ETIQ), ETIQ[x], x)
+  ifelse(grepl("^educ_f5", x), etiquetar_educ_f5(x), x)
+}
 
 # =============================================================================
 # FIGURA 1 — H1/H1b: coeficientes de los modelos multinivel
@@ -234,13 +256,60 @@ fig5 <- ggplot(coef_nulo, aes(x = estimate, y = fct_rev(factor(term_lab)),
   facet_wrap(~ modelo, scales = "free_x") +
   scale_colour_manual(values = c(`TRUE` = UC_ROJO, `FALSE` = UC_GRIS), guide = "none") +
   scale_shape_manual(values = c(`TRUE` = 16, `FALSE` = 1), guide = "none") +
-  labs(title = "H2 y H4: la clase de origen no predice la composición de la red",
+  # ACTUALIZADO (20-ago-2026, ver DECISIÓN 11): el título/caption anteriores
+  # decían "no predice", pero el escalonamiento (tabla_h2_escalon/
+  # tabla_h4_escalon) muestra que ISEI_orig_hat SÍ predice ambas DV en su
+  # forma bivariada (H2: b=0.0086***, H4: b=-0.00076***) y pierde
+  # significancia justo al entrar educ_f5 -- consistente con un efecto
+  # mediado por educación (Blau-Duncan: origen -> educación -> destino), no
+  # con ausencia de efecto. Este gráfico muestra el EFECTO DIRECTO
+  # (controlando por educación); ver Fig5b para el efecto total/mediado.
+  labs(title = "H2 y H4: sin efecto DIRECTO de la clase de origen, controlando por educación",
        subtitle = "En rojo, el término hipotetizado (ISEI de origen). Puntos huecos: no significativos al 5%.",
        x = "Coeficiente, IC 95%", y = NULL,
        caption = paste0("H2: N = ", nrow(mod$df_ego), ". H4: N = ", nrow(mod$df_H4),
-                        ". En ambos casos el ISEI de origen es no significativo;\n",
-                        "lo que sí predice ambas variables es la educación de ego."))
-guardar(fig5, "fig5_h2_h4_nulos", w = 9.5, h = 5)
+                        ". El efecto directo de ISEI de origen es no significativo controlando\n",
+                        "por educación de ego -- pero el efecto TOTAL sí lo es (ver Fig5b): el origen\n",
+                        "predice la red principalmente a través de cuánta educación logra ego."))
+guardar(fig5, "fig5_h2_h4_directo", w = 9.5, h = 5)
+
+# =============================================================================
+# FIGURA 5b — H2 y H4: el coeficiente de ISEI de origen se diluye al entrar
+# educación (evidencia de mediación)
+# =============================================================================
+# NUEVO (20-ago-2026, DECISIÓN 11). Visualiza tabla_h2_escalon/tabla_h4_escalon
+# de 05_modelos.R: el coeficiente de ISEI_orig_hat en cada paso del
+# escalonamiento de controles. La caída ocurre en el paso 2 (+ educación) y
+# se mantiene plana después -- Ext/Rango_P/Estatus_Max casi no mueven nada
+# adicional. Esto NO es un test formal de mediación (habría que usar
+# `mediation` o Baron-Kenny con bootstrap); es evidencia descriptiva de
+# dónde se concentra la caída del coeficiente.
+
+tabla_escalon_fig <- bind_rows(
+  mod$tabla_h2_escalon |> mutate(modelo = "H2: diversidad de la red (Div_Red)"),
+  mod$tabla_h4_escalon |> mutate(modelo = "H4: cierre estructural (cierre_blando)")
+) |>
+  mutate(
+    paso_n = as.integer(str_extract(paso, "^\\d+")),
+    paso_lab = str_remove(paso, "^\\d+\\.\\s*"),
+    sig = p < 0.05
+  )
+
+fig5b <- ggplot(tabla_escalon_fig, aes(paso_n, b)) +
+  geom_hline(yintercept = 0, linetype = "dashed", colour = UC_GRIS, linewidth = 0.4) +
+  geom_vline(xintercept = 1.5, linetype = "dotted", colour = UC_ROJO, linewidth = 0.5) +
+  geom_ribbon(aes(ymin = b - 1.96 * se, ymax = b + 1.96 * se), fill = UC_AZUL, alpha = 0.15) +
+  geom_line(colour = UC_AZUL, linewidth = 0.8) +
+  geom_point(aes(shape = sig), colour = UC_AZUL, size = 2.5) +
+  scale_shape_manual(values = c(`TRUE` = 16, `FALSE` = 1), guide = "none") +
+  scale_x_continuous(breaks = 1:6, labels = function(x) x) +
+  facet_wrap(~ modelo, scales = "free_y") +
+  labs(title = "El efecto del origen de clase se diluye justo al entrar educación",
+       subtitle = "Coeficiente de ISEI de origen por paso del escalonamiento (punto lleno = p<0.05)",
+       x = "Paso (1=solo ISEI origen; 2=+educ; 3=+sexo/edad; 4=+Ext; 5=+Rango_P; 6=+Estatus_Max)",
+       y = "Coeficiente de ISEI de origen, IC 95%",
+       caption = "Línea roja punteada: punto donde entra educación (paso 2). Caída ~88% (H2) y ~64% (H4)\nen ese paso; pasos 3-6 casi no mueven el coeficiente adicionalmente.")
+guardar(fig5b, "fig5b_h2_h4_escalonamiento", w = 9.5, h = 5)
 
 # =============================================================================
 # FIGURA 6 — H4: ausencia de forma de U
@@ -253,7 +322,13 @@ media_isei <- mean(mod$df_H4$ISEI_orig_hat, na.rm = TRUE)
 
 nd <- tibble(
   ISEI_orig_hat = seq(rango_isei[1], rango_isei[2], length.out = 100),
-  educ = median(mod$df_H4$educ, na.rm = TRUE),
+  # CORREGIDO (20-ago-2026): H4_cuadratico ahora usa educ_f5 (Decisión 12 de
+  # 05_modelos.R), no educ_f -- esta línea seguía usando educ_f, lo que
+  # habría hecho fallar predict() (columna inexistente en el modelo) o, si
+  # mod$df_H4$educ_f seguía presente como columna sin usarse, habría sido
+  # silenciosamente ignorada por predict() sin error, dejando la curva mal
+  # ajustada. Se fija en el nivel de referencia (Básica o menos).
+  educ_f5 = factor(levels(mod$df_H4$educ_f5)[1], levels = levels(mod$df_H4$educ_f5)),
   sexo = factor("Hombre", levels = levels(mod$df_H4$sexo)),
   edad = mean(mod$df_H4$edad, na.rm = TRUE),
   Ext = mean(mod$df_H4$Ext, na.rm = TRUE),
@@ -271,38 +346,21 @@ fig6 <- ggplot(nd, aes(ISEI_orig_hat, fit)) +
   geom_line(colour = UC_AZUL, linewidth = 0.9) +
   geom_rug(data = mod$df_H4, aes(x = ISEI_orig_hat), inherit.aes = FALSE,
            colour = UC_GRIS, alpha = 0.25) +
-  labs(title = "H4: el cierre estructural no sigue una forma de U por clase de origen",
-       subtitle = "Valores predichos con especificación cuadrática, resto de covariables en sus valores típicos",
+  labs(title = "H4: el efecto DIRECTO del origen no sigue una forma de U",
+       subtitle = "Valores predichos con especificación cuadrática, controlando por educación (nivel de referencia)",
        x = "ISEI de origen", y = "Cierre estructural predicho",
-       caption = paste0("Término cuadrático no significativo (p = 0,89). A diferencia de la forma de U documentada\n",
-                        "por Otero, Völker y Rözer (2021) para la segregación de redes, aquí la relación es plana."))
+       caption = paste0("Término cuadrático no significativo (p = 0,81). A diferencia de la forma de U documentada\n",
+                        "por Otero, Völker y Rözer (2021), aquí el efecto directo es plano -- el efecto total\n",
+                        "(sin controlar por educación) sí es significativo y lineal; ver Fig5b."))
 guardar(fig6, "fig6_h4_sin_u", w = 7.5, h = 5)
 
-# =============================================================================
-# FIGURA 7 — H4b: el efecto principal, no la interacción
-# =============================================================================
-# La interacción no es significativa, pero el efecto principal de
-# share_com4_ego sí y es fuerte. La figura muestra ambas cosas y advierte
-# sobre la probable naturaleza artefactual del efecto principal.
-
-df_h4b <- mod$df_H4 |> filter(!is.na(share_com4_ego), !is.na(cierre_blando))
-
-fig7 <- ggplot(df_h4b, aes(share_com4_ego, cierre_blando)) +
-  geom_point(aes(size = weight), alpha = 0.2, colour = "#B8860B", show.legend = FALSE) +
-  geom_smooth(method = "lm", formula = y ~ x, colour = "#B8860B",
-              fill = "#B8860B", alpha = 0.15, linewidth = 0.9) +
-  scale_size_continuous(range = c(0.4, 2.5)) +
-  labs(title = "H4b: peso bio-ambiental-legal y cierre estructural",
-       subtitle = "Efecto principal fuerte (b = −0,61, p < 0,001); la interacción con clase de origen no es significativa (p = 0,20)",
-       x = "Peso de la comunidad bio-ambiental-legal en la ocupación de ego",
-       y = "Cierre estructural (versión blanda)",
-       caption = paste0("ADVERTENCIA: el efecto principal es probablemente artefactual. El generador de posiciones contiene\n",
-                        "muy pocas posiciones de esta comunidad, por lo que quien trabaja en ella necesariamente tiene poco\n",
-                        "solapamiento con su red. No interpretar sustantivamente sin resolver esa limitación del instrumento."))
-guardar(fig7, "fig7_h4b_advertencia", w = 8, h = 5.5)
+# NOTA (20-ago-2026): Figura 7 (H4b: efecto principal de share_com4_ego)
+# se retira -- H4b se retiró del pipeline en 05_modelos.R (Decisión 14, a
+# pedido del investigador). La antigua Figura 8 (correlaciones) pasa a ser
+# Figura 7.
 
 # =============================================================================
-# FIGURA 8 — Matriz de correlaciones entre indicadores de red
+# FIGURA 7 — Matriz de correlaciones entre indicadores de red
 # =============================================================================
 
 cor_long <- as.data.frame(as.table(mod$mat_cor)) |>
@@ -311,7 +369,7 @@ cor_long <- as.data.frame(as.table(mod$mat_cor)) |>
 
 orden <- unique(cor_long$v1_lab)
 
-fig8 <- ggplot(cor_long, aes(factor(v1_lab, orden), factor(v2_lab, rev(orden)), fill = r)) +
+fig7 <- ggplot(cor_long, aes(factor(v1_lab, orden), factor(v2_lab, rev(orden)), fill = r)) +
   geom_tile(colour = "white", linewidth = 0.5) +
   geom_text(aes(label = sprintf("%.2f", r)), size = 2.8,
             colour = if_else(abs(cor_long$r) > 0.6, "white", "grey20")) +
@@ -329,7 +387,7 @@ fig8 <- ggplot(cor_long, aes(factor(v1_lab, orden), factor(v2_lab, rev(orden)), 
   theme(axis.text.x = element_text(angle = 40, hjust = 1, size = 8),
         axis.text.y = element_text(size = 8),
         panel.grid = element_blank())
-guardar(fig8, "fig8_correlaciones", w = 8, h = 7)
+guardar(fig7, "fig7_correlaciones", w = 8, h = 7)
 
 # =============================================================================
 # TABLAS DE RESULTADOS (Viewer)
@@ -356,22 +414,36 @@ modelsummary(mod$H3_modelos, output = "gt", coef_map = cm_h3, stars = TRUE,
              gof_map = c("nobs", "r.squared"),
              title = "H3: correspondencia de comunidades entre red y ocupación de ego")
 
+# DECISIÓN 12 (05_modelos.R): H2 y H4 usan educ_f5 (5 categorías colapsadas),
+# no educ_f (10 niveles, referencia n=3) ni educ continua -- coef_map
+# necesita una entrada por nivel no-referencia, o modelsummary elimina esas
+# filas en vez de mostrarlas sin etiqueta.
+ROTULOS_EDUC_F5 <- c(
+  "2. Media"                     = "Media",
+  "3. Tecnica superior"          = "Técnica superior",
+  "4. Universitaria incompleta"  = "Universitaria incompleta",
+  "5. Universitaria completa+"   = "Universitaria completa o posgrado"
+)
+niveles_educ_f5 <- levels(mod$df_ego$educ_f5)[-1]  # sin el nivel de referencia
+cm_educ_f5      <- setNames(paste0("Educación: ", ROTULOS_EDUC_F5[niveles_educ_f5]),
+                             paste0("educ_f5", niveles_educ_f5))
+
 cm_ego <- c("ISEI_orig_hat" = "ISEI de origen", "ISEI_orig_c" = "ISEI de origen (centrado)",
-            "ISEI_orig_c2" = "ISEI de origen² ", "share_com4_ego" = "Peso bio-ambiental-legal",
-            "ISEI_orig_hat:share_com4_ego" = "ISEI origen × Peso bio-amb-legal",
-            "educ" = "Educación", "sexoMujer" = "Mujer", "edad" = "Edad",
+            "ISEI_orig_c2" = "ISEI de origen² ",
+            cm_educ_f5, "sexoMujer" = "Mujer", "edad" = "Edad",
             "Ext" = "Extensión", "Rango_P" = "Rango de prestigio",
             "Estatus_Max" = "Estatus máximo")
 
+# NOTA (20-ago-2026): H4b se retira de esta tabla -- ver Decisión 14 de
+# 05_modelos.R (ya no está en mod$H4b, se eliminó del pipeline).
 modelsummary(list("H2: diversidad red" = mod$H2_div,
                   "H4: cierre (lineal)" = mod$H4_lineal,
-                  "H4: cierre (cuadrático)" = mod$H4_cuadratico,
-                  "H4b: interacción" = mod$H4b),
+                  "H4: cierre (cuadrático)" = mod$H4_cuadratico),
              output = "gt", coef_map = cm_ego, stars = TRUE,
              gof_map = c("nobs", "r.squared"),
-             title = "H2, H4 y H4b: modelos a nivel ego")
+             title = "H2 y H4: modelos a nivel ego")
 
-cat("\n=== FIN ETAPA 06: 8 figuras + 3 tablas ===\n")
+cat("\n=== FIN ETAPA 06: 7 figuras + 3 tablas ===\n")
 if (!EXPORTAR) cat("EXPORTAR = TRUE. Cambiar a TRUE para guardar PNG en output/figuras/\n")
 
 # =============================================================================
@@ -394,12 +466,36 @@ if (!EXPORTAR) cat("EXPORTAR = TRUE. Cambiar a TRUE para guardar PNG en output/f
 #     omiten. Un resultado nulo bien estimado es un resultado, y la Figura 5
 #     muestra además qué sí predice cada variable dependiente (educación en
 #     ambos casos), que es información sustantiva.
-# V5. La Figura 7 lleva la advertencia sobre el carácter probablemente
-#     artefactual del efecto principal de share_com4_ego incorporada en la
-#     propia figura, no solo en el texto, porque una figura circula sola y
-#     puede leerse fuera de su contexto.
-# V6. La Figura 8 señala explícitamente la correlación de 0,95 entre rango de
-#     prestigio y estatus máximo. Ambos están en todos los modelos a nivel ego
-#     como controles; sus coeficientes individuales no son interpretables por
+# V5. RETIRADA (20-ago-2026, ver V8). Describía la advertencia incorporada en
+#     la antigua Figura 7 (H4b), retirada del pipeline.
+# V6. La Figura 7 (antes Figura 8, renumerada tras retirar H4b -- ver V8)
+#     señala explícitamente la correlación de 0,95 entre rango de prestigio
+#     y estatus máximo. Ambos están en todos los modelos a nivel ego como
+#     controles; sus coeficientes individuales no son interpretables por
 #     separado, aunque su inclusión conjunta como control sea correcta.
+# V7. NUEVO (20-ago-2026). Fig5 se retitula: "no predice" -> "sin efecto
+#     directo controlando por educación". El escalonamiento de controles
+#     (05_modelos.R) muestra que ISEI_orig_hat SÍ predice ambas DV en forma
+#     bivariada y pierde significancia justo al entrar educ_f5 (caída ~88% en
+#     H2, ~64% en H4) -- consistente con mediación vía educación (Blau-Duncan:
+#     origen -> educación -> destino), no con ausencia de efecto. Se agrega
+#     Fig5b, que visualiza la trayectoria del coeficiente paso a paso y hace
+#     visible dónde ocurre la caída. Fig6 se recaptiona en el mismo sentido:
+#     la curva sin forma de U es el efecto DIRECTO, no el total. NO se corrió
+#     un test formal de mediación (Baron-Kenny/bootstrap) -- Fig5b es
+#     evidencia descriptiva, no una prueba formal; declarar esa distinción en
+#     el texto de la tesis antes de afirmar mediación como resultado firme.
+#     De paso, se corrige un error preexistente en el caption de Fig6: decía
+#     "p = 0,89" para el término cuadrático; el valor real impreso por
+#     H4_cuadratico es p = 0,8144 (0,81).
+# V8. NUEVO (20-ago-2026). H4b se retira del pipeline a pedido del
+#     investigador (ver Decisión 14 de 05_modelos.R): se elimina la antigua
+#     Figura 7 (efecto principal de share_com4_ego) y la columna "H4b" de la
+#     tabla modelsummary de H2/H4. La antigua Figura 8 (correlaciones) pasa a
+#     numerarse como Figura 7. Además, H2/H4 pasan de educ_f (10 niveles,
+#     referencia n=3) a educ_f5 (5 categorías colapsadas -- ver Decisión 12
+#     de 05_modelos.R); se corrige de paso un bug real en la Figura 6: el
+#     newdata para la curva cuadrática de H4 seguía construyendo la columna
+#     `educ_f` cuando H4_cuadratico ya usaba `educ_f5`, lo que habría hecho
+#     fallar predict() o producido una curva mal ajustada sin aviso.
 # =============================================================================

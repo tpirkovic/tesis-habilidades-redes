@@ -23,15 +23,28 @@
 #   PASO 3  → P2 · H2: clase de origen → diversidad de habilidades de la red
 #   PASO 4  → P2 · H3: correspondencia de comunidades entre red y ego (4 modelos)
 #   PASO 5  → P2 · H4: clase de origen → cierre estructural
-#   PASO 6  → P2 · H4b: moderación por peso bio-ambiental-legal de ego
 #
 # ACTUALIZADO (20-ago-2026): PASO 3/4 reescritos -- referenciaban m$H2_comp,
 # m$H3_div, m$H3_comp, objetos de una version anterior de 05_modelos.R que ya
 # no existen (H2 se redujo a Div_Red + Orient_ego descriptivo; H3 pasó de
 # Div_ego/Comp_ego a 4 modelos paralelos de correspondencia de comunidades).
 # El script fallaba en PASO 3 (m$H2_comp es NULL) sin haber corrido nunca
-# PASO 4/5/6 desde ese cambio. Se agregan PASO 5/6 (H4, H4b), inexistentes
-# hasta ahora en este script pese a estar hace tiempo en 05_modelos.R.
+# PASO 4/5 desde ese cambio. Se agregó entonces PASO 5/6 (H4, H4b).
+#
+# ACTUALIZADO (20-ago-2026, 2da vez): PASO 3 y PASO 5 ahora imprimen también
+# tabla_h2_escalon/tabla_h4_escalon (05_modelos.R, DECISIÓN 11) y la guía de
+# lectura se corrige: el efecto DIRECTO de ISEI de origen no es significativo
+# controlando por educación, pero el efecto en su forma bivariada (sin
+# controles) sí lo es y cae ~88% (H2) / ~64% (H4) justo al entrar educ_f5 --
+# evidencia descriptiva de mediación vía educación (origen -> educación ->
+# destino), no de ausencia de efecto. "H2/H4 no se sostienen" ya no es la
+# lectura correcta sin esa matización.
+#
+# ACTUALIZADO (20-ago-2026, 3ra vez): educ_f (10 niveles, referencia n=3) se
+# reemplaza por educ_f5 (5 categorías colapsadas, Decisión 12 de
+# 05_modelos.R). H4b se retira del pipeline a pedido del investigador
+# (Decisión 14 de 05_modelos.R): se elimina el antiguo PASO 6 completo. La
+# estructura queda en 5 pasos (0 a 5), no 6.
 # =============================================================================
 
 suppressPackageStartupMessages({
@@ -67,7 +80,7 @@ etiquetas <- c(
   "educ_sc"            = "Nivel educativo (estandarizado)",
   "SH_ip_sc:educ_sc"   = "Interacción: similitud de habilidades × nivel educativo",
   "logTam_sc"          = "Tamaño del grupo ocupacional en la RM, log (estandarizado)",
-  # --- Modelos a nivel ego (H2, H3, H4, H4b) ---
+  # --- Modelos a nivel ego (H2, H3, H4) ---
   "ISEI_orig_hat"      = "Clase de origen (ISEI de la ocupación del padre/sostenedor)",
   "ISEI_orig_c"        = "Clase de origen, centrada (ISEI del padre - media)",
   "ISEI_orig_c2"       = "Clase de origen, centrada al cuadrado (forma de U)",
@@ -83,12 +96,26 @@ etiquetas <- c(
   "share_com1_red"     = "Peso Dirección-servicio en la RED",
   "share_com2_red"     = "Peso Técnico-manual en la RED",
   "share_com3_red"     = "Peso Analítico-digital-simbólico en la RED",
-  "share_com4_red"     = "Peso Bio-ambiental-legal en la RED",
-  "share_com4_ego"     = "Peso Bio-ambiental-legal en la ocupación de EGO",
-  "ISEI_orig_hat:share_com4_ego" = "Interacción: clase de origen × peso bio-ambiental-legal de ego"
+  "share_com4_red"     = "Peso Bio-ambiental-legal en la RED"
 )
 
-legibiliza <- function(term) ifelse(term %in% names(etiquetas), etiquetas[term], term)
+# DECISIÓN 12 (05_modelos.R): H2 y H4 usan educ_f5 (5 categorías colapsadas),
+# no educ_f (10 niveles, referencia n=3) ni educ continua. Reemplaza la
+# recodificación anterior -- ver Decisión 12 para el detalle de por qué se
+# colapsó (referencia con n=3 inflaba artificialmente los errores estándar).
+ROTULOS_EDUC_F5 <- c(
+  "2. Media"                    = "Media",
+  "3. Tecnica superior"         = "Técnica superior",
+  "4. Universitaria incompleta" = "Universitaria incompleta",
+  "5. Universitaria completa+"  = "Universitaria completa o posgrado"
+)
+legibiliza <- function(term) {
+  base <- ifelse(term %in% names(etiquetas), etiquetas[term], term)
+  es_educ_f5 <- grepl("^educ_f5", term)
+  nivel <- sub("^educ_f5", "", term)
+  ifelse(es_educ_f5 & nivel %in% names(ROTULOS_EDUC_F5),
+         paste0("Educación (ego, H2/H4): ", ROTULOS_EDUC_F5[nivel]), base)
+}
 
 sig_estrellas <- function(p) case_when(
   is.na(p)    ~ "",
@@ -231,10 +258,25 @@ imprimir_coefs(
   "Descriptivo (NO hipótesis) · Orientación sectorial de la red (Orient_ego)"
 )
 
+# NUEVO (20-ago-2026, ver DECISIÓN 12 de 05_modelos.R): escalonamiento de
+# controles. El coeficiente de ISEI_orig_hat en cada paso, agregando
+# controles de a uno, para ver dónde exactamente pierde significancia.
+cat("\n--- Escalonamiento de controles: coeficiente de ISEI de origen por paso ---\n")
+print(m$tabla_h2_escalon, n = nrow(m$tabla_h2_escalon))
+
 cat("\nGUÍA DE LECTURA H2:\n")
-cat("  · Mira 'Clase de origen' en el primer modelo (Div_Red).\n")
-cat("  · Significativo = la diversidad de habilidades de la red está\n")
-cat("    estratificada por origen social.\n")
+cat("  · Mira 'Clase de origen' en el primer modelo (Div_Red, con TODOS los\n")
+cat("    controles): no es significativo. Eso es el efecto DIRECTO, neto de\n")
+cat("    educación de ego.\n")
+cat("  · Mira la tabla de escalonamiento: en el paso 1 (solo ISEI de origen,\n")
+cat("    sin ningún control) el coeficiente SÍ es significativo (p<0,001) y\n")
+cat("    cae ~88% justo al entrar educ_f5 en el paso 2. Esto es evidencia\n")
+cat("    (descriptiva, no un test formal de mediación) de que el origen de\n")
+cat("    clase predice la diversidad de la red principalmente A TRAVÉS de\n")
+cat("    cuánta educación logra ego (origen -> educación -> destino), no de\n")
+cat("    forma directa. NO es un resultado nulo sin más -- es un efecto\n")
+cat("    mediado. Declarar esta distinción en el texto, no solo 'H2 no se\n")
+cat("    sostiene'.\n")
 cat("  · El segundo modelo (Orient_ego) es descriptivo, no prueba de hipótesis:\n")
 cat("    se reporta para contexto, no se interpreta como confirmación/refutación.\n")
 
@@ -295,39 +337,31 @@ imprimir_coefs(
   "H4 · Especificación cuadrática (forma de U)  [ROBUSTEZ]"
 )
 
+# NUEVO (20-ago-2026, ver DECISIÓN 12 de 05_modelos.R): mismo escalonamiento
+# que en H2.
+cat("\n--- Escalonamiento de controles: coeficiente de ISEI de origen por paso ---\n")
+print(m$tabla_h4_escalon, n = nrow(m$tabla_h4_escalon))
+
 cat("\nGUÍA DE LECTURA H4:\n")
-cat("  · Mira 'Clase de origen' en la especificación lineal.\n")
-cat("  · Negativo y significativo = a mayor origen, menor cierre estructural.\n")
+cat("  · Mira 'Clase de origen' en la especificación lineal CON TODOS los\n")
+cat("    controles: no es significativo (p=0,23). Ese es el efecto DIRECTO,\n")
+cat("    neto de educación de ego.\n")
+cat("  · Mira la tabla de escalonamiento: en el paso 1 (solo ISEI de origen)\n")
+cat("    el coeficiente SÍ es significativo (p<0,001, negativo -- mayor\n")
+cat("    origen, menor cierre) y cae ~64% al entrar educ_f5 en el paso 2, tras\n")
+cat("    lo cual queda marginal (p~0,08-0,09) y luego no significativo.\n")
+cat("    Mismo patrón que H2: evidencia (descriptiva) de mediación vía\n")
+cat("    educación, no de ausencia de efecto. Declarar esta distinción en el\n")
+cat("    texto en vez de reportar 'H4 no se sostiene' sin más.\n")
 cat("  · En la cuadrática, mira el término al cuadrado: significativo y\n")
-cat("    positivo sugeriría forma de U (alto cierre en ambos extremos).\n")
+cat("    positivo sugeriría forma de U (alto cierre en ambos extremos). Aquí\n")
+cat("    no lo es (p=0,81) -- pero esa curva es también el efecto DIRECTO.\n")
 
-
-# =============================================================================
-# PASO 6 — P2 · H4b: moderación por peso bio-ambiental-legal de ego
-# =============================================================================
-# PREGUNTA (H4b): ¿la asociación origen-cierre estructural es más fuerte
-#   cuanto mayor es el peso de la comunidad bio-ambiental-legal en la
-#   ocupación de ego?
-#
-# ADVERTENCIA A DECLARAR (ver Decisión 6 de 05_modelos.R): share_com4_ego está
-# fuertemente concentrada cerca de cero (solo 1 de 978 egos la tiene como
-# comunidad dominante). La potencia de esta interacción es limitada.
-
-cat("\n\n=== PASO 6: H4b — Moderación por peso bio-ambiental-legal de ego ===\n")
-cat("[ADVERTENCIA: share_com4_ego concentrada cerca de 0 -- potencia limitada,\n")
-cat(" ver Decisión 6 de 05_modelos.R antes de interpretar.]\n")
-
-imprimir_coefs(
-  broom::tidy(m$H4b),
-  "H4b · Interacción clase de origen × peso bio-ambiental-legal de ego"
-)
-
-cat("\nGUÍA DE LECTURA H4b:\n")
-cat("  · Mira la fila de interacción al final de la tabla.\n")
-cat("  · Significativa = el efecto del origen sobre el cierre depende de\n")
-cat("    cuánto peso bio-ambiental-legal tiene la ocupación de ego.\n")
+# NOTA (20-ago-2026): PASO 6 (H4b: moderación por peso bio-ambiental-legal de
+# ego) se retira -- H4b se eliminó del pipeline en 05_modelos.R (Decisión
+# 14, a pedido del investigador). m$H4b ya no existe en modelos.rds.
 
 cat("\n\n", strrep("=", 78), "\n", sep = "")
 cat("FIN — Figuras nuevas: fig_CA_espacio_etiquetado.(pdf/png)\n")
-cat("Todo lo demás se imprimió en esta consola, hipótesis por hipótesis (H1 a H4b).\n")
+cat("Todo lo demás se imprimió en esta consola, hipótesis por hipótesis (H1 a H4).\n")
 cat(strrep("=", 78), "\n", sep = "")

@@ -50,6 +50,45 @@ osr_essential<- readRDS(file.path(INTERMEDIATE_DIR, "osr_essential.rds"))
 gp_coords    <- ca_obj$gp_coords
 gp_crosswalk <- read_csv(file.path(DATA_DIR, "gp_crosswalk.csv"), show_col_types = FALSE)
 
+# ── GUARD NUEVO (20-ago-2026): ca_coords.rds debe ser la versión CA ponderada
+# RM (388 filas de universo de ocupaciones), NUNCA la versión global sin
+# ponderar (426 filas) que sobrescribió en silencio a la versión correcta en
+# agosto 2026 (ver 00_reconciliar_ca_ponderado.R y bug log del proyecto).
+# No se conoce con certeza el nombre exacto del campo de ca_obj que guarda el
+# universo completo de ocupaciones (gp_coords son solo las 27 posiciones del
+# generador) -- se imprime un diagnóstico con el nrow() de cada elemento de
+# ca_obj para identificarlo. Una vez confirmado, fijar CAMPO_CA_UNIVERSO abajo
+# para que el stopifnot() se active automáticamente en cada corrida futura.
+CAMPO_CA_UNIVERSO <- "ca_coords"  # confirmado 20-ago-2026: diagnóstico mostró ca_coords=388, gp_coords=27
+N_ESPERADO_RM <- 388L
+if (!is.null(CAMPO_CA_UNIVERSO)) {
+  n_ca_universo <- nrow(ca_obj[[CAMPO_CA_UNIVERSO]])
+  if (n_ca_universo != N_ESPERADO_RM) {
+    stop(sprintf(
+      paste0("ca_coords.rds no tiene %d filas de universo de ocupaciones ",
+             "(tiene %d) -- podria ser la version global (426, INCORRECTA) ",
+             "en vez de la ponderada RM. Correr 00_reconciliar_ca_ponderado.R antes de continuar."),
+      N_ESPERADO_RM, n_ca_universo
+    ))
+  }
+} else {
+  obtener_nrow <- function(x) {
+    n <- tryCatch(nrow(x), error = function(e) NULL)
+    if (is.null(n)) NA_integer_ else n
+  }
+  tams_ca <- vapply(ca_obj, obtener_nrow, FUN.VALUE = integer(1))
+  tams_ca <- tams_ca[!is.na(tams_ca)]
+  cat("\nDIAGNOSTICO ca_coords.rds -- nrow() de cada elemento de la lista (para ubicar",
+      "el universo de ocupaciones; se espera 388 si es la version RM ponderada,",
+      "426 seria sospechoso de ser la version global):\n")
+  print(tams_ca)
+  warning("CAMPO_CA_UNIVERSO no esta definido en 04_indicadores_red.R -- revisa el ",
+          "diagnostico impreso arriba, identifica que campo de ca_obj trae el universo ",
+          "de ocupaciones, y completa CAMPO_CA_UNIVERSO para activar la verificacion ",
+          "automatica en la proxima corrida. Mientras tanto, el pipeline sigue SIN ",
+          "garantia automatica de que ca_coords.rds sea la version RM ponderada.")
+}
+
 comunidades  <- readRDS(file.path(COMUNIDADES_DIR, "imputacion_comunidades.rds"))
 cierre_tbl   <- read_csv(file.path(COMUNIDADES_DIR, "indicador_cierre_estructural.csv"),
                           show_col_types = FALSE)
@@ -373,4 +412,12 @@ cat("=== FIN ETAPA 04 ===\n")
 #     base_larga por si se necesita de respaldo, pero 05_modelos.R deja de
 #     reportarla. Requiere que 08 haya corrido con el fix D8 (exporta
 #     grafo/B en imputacion_comunidades.rds) antes que 04.
+# 11. NUEVO (20-ago-2026). Se agrega guard de verificación de ca_coords.rds
+#     (RM ponderada, 388 filas, vs. global sin ponderar, 426 filas -- ver
+#     Acción 1). Queda con CAMPO_CA_UNIVERSO = NULL porque no se conoce el
+#     nombre exacto del campo de la lista ca_obj que trae el universo
+#     completo de ocupaciones; imprime un diagnóstico y emite warning() en
+#     vez de fallar en silencio como antes. COMPLETAR CAMPO_CA_UNIVERSO tras
+#     revisar el diagnóstico de la primera corrida, para que el stopifnot()
+#     quede activo en las corridas siguientes.
 # =============================================================================
