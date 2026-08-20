@@ -38,15 +38,21 @@ SEMILLA          <- 2025
 # reasigna mas abajo haciendo match por contenido (categoria ancla), no por
 # ID, siguiendo la convencion ya establecida en el resto del pipeline.
 ETIQUETAS <- c(
-  "coordinacion_cuidado"  = "Coordinacion-cuidado",
-  "tecnico_manual"        = "Tecnico-manual",
-  "analitico_simbolico"   = "Analitico-simbolico",
-  "agro_bio_legal"        = "Agro-bio-legal"
+  "coordinacion_cuidado"  = "Direccion_servicio",
+  "tecnico_manual"        = "Tecnico_manual",
+  "analitico_simbolico"   = "Analitico_digital_simbolico",
+  "agro_bio_legal"        = "Bio_ambiental_legal"
 )
 ANCLA_COORDINACION <- "S4.9"   # tomar decisiones
 ANCLA_TECNICO      <- "053"    # ciencias fisicas
 ANCLA_ANALITICO    <- "S2.3"   # gestionar informacion
 ANCLA_AGRO         <- "081"    # agricultura
+# NOTA (20-ago-2026, limpieza post-auditoria): las 4 etiquetas se estandarizan
+# a los nombres oficiales usados en 08_comunidades_por_ocupacion.R (fuente de
+# la particion), 04, 05, 07, el README y la presentacion. Antes este script
+# tenia su propio vocabulario (Coordinacion-cuidado, Agro-bio-legal, etc.)
+# para la MISMA particion -- mismas anclas, mismo contenido -- lo que hacia
+# parecer que eran categorias distintas si se cruzaban tablas de 08 y 09.
 
 leer <- function(ruta) {
   if (!file.exists(ruta)) stop(sprintf("No existe el archivo:\n  %s", ruta), call. = FALSE)

@@ -182,20 +182,30 @@ construir_red_phi <- function(mat, phi_min_edge = PHI_MIN_EDGE,
 # =============================================================================
 
 correr_louvain <- function(grafo, semilla = SEMILLA) {
-  set.seed(semilla)
   particion <- cluster_louvain(grafo, weights = E(grafo)$weight)
   mem <- setNames(as.integer(membership(particion)), names(membership(particion)))
   list(membership = mem, Q = modularity(particion), n_comunidades = length(unique(mem)))
 }
 
 correr_leiden <- function(grafo, semilla = SEMILLA) {
-  set.seed(semilla)
   particion <- cluster_leiden(grafo, objective_function = "modularity",
                                weights = E(grafo)$weight, n_iterations = 10)
   mem <- setNames(as.integer(membership(particion)), names(membership(particion)))
   list(membership = mem, Q = modularity(grafo, mem, weights = E(grafo)$weight),
        n_comunidades = length(unique(mem)))
 }
+# FIX (20-ago-2026, auditoria): set.seed() se saca de DENTRO de estas dos
+# funciones. Motivo: se usan como funcion_metodo() dentro del loop de
+# bootstrap_metodo() (mas abajo), y llamar set.seed() en cada una de las 500
+# iteraciones resetea el generador aleatorio GLOBAL justo antes de que la
+# iteracion siguiente dibuje su muestra con sample() -- las muestras dejan de
+# ser independientes entre si. Diagnosticado y demostrado en
+# R1c_diagnostico_bootstrap.R (6 de 50 muestras distintas CON el bug, 50 de
+# 50 SIN el; ver ese script para el detalle). El ARI mediano de RM-Louvain
+# pasa de 0.8169 (IC plano, señal del bug) a 0.762 (IC 0.54-0.88, real) tras
+# este fix -- ese es el numero a citar, no el anterior. Se agrega
+# set.seed(SEMILLA) una sola vez, explicito, antes de la corrida de
+# referencia (unica, no bootstrap) para mantener esa parte reproducible.
 
 # Misma logica de evaluar_nucleo() de 06: identificacion por contenido
 # (ancla 081 + nucleo de 10 categorias), nunca por ID de comunidad.
@@ -220,6 +230,7 @@ comparar <- function(mat, etiqueta) {
   grafo <- construir_red_phi(mat)
   stopifnot("La red construida no debe ser NULL" = !is.null(grafo))
 
+  set.seed(SEMILLA)  # explicito aqui: ya no vive dentro de correr_louvain/correr_leiden
   louvain <- correr_louvain(grafo)
   leiden  <- correr_leiden(grafo)
   ari <- igraph::compare(louvain$membership, leiden$membership, method = "adjusted.rand")

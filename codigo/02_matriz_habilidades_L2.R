@@ -50,6 +50,14 @@ br <- read_csv(file.path(ESCO_DIR, "broaderRelationsSkillPillar_es.csv"),
 
 skill_hier <- read_csv(file.path(ESCO_DIR, "skillsHierarchy_es.csv"),
                         col_types = cols(.default = "c"), show_col_types = FALSE)
+# NOTA (verificado 20-ago-2026, auditoria): esta lectura emite "One or more
+# parsing issues" -- problems(skill_hier) muestra 188 de 640 filas con menos
+# de 14 columnas. Es benigno: son categorias de nivel mas alto (sin codigo de
+# Nivel 2 o Nivel 3) cuyo CSV de origen omite las comas finales de los campos
+# vacios; readr las rellena correctamente con NA. El resto del pipeline ya
+# filtra con !is.na() sobre esas columnas en todos los usos de este objeto.
+# No requiere fix -- se documenta aqui para no repetir el diagnostico cada
+# vez que aparece en otro script (03, 08, 09, robustez/R2, R3, R4).
 
 # ── ACCIÓN 5: habilidad individual -> su SkillGroup ─────────────────────────
 # Se filtra broaderRelationsSkillPillar a las filas donde el concepto es una

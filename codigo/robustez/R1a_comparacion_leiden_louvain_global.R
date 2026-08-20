@@ -167,14 +167,12 @@ cat("Red phi construida: ", vcount(red_completa), " nodos, ", ecount(red_complet
 # =============================================================================
 
 correr_louvain <- function(grafo, semilla = SEMILLA) {
-  set.seed(semilla)
   particion <- cluster_louvain(grafo, weights = E(grafo)$weight)
   mem <- membership(particion)
   list(membership = mem, Q = modularity(particion), n_comunidades = length(unique(mem)))
 }
 
 correr_leiden_mod <- function(grafo, semilla = SEMILLA) {
-  set.seed(semilla)
   particion <- cluster_leiden(grafo, objective_function = "modularity",
                                weights = E(grafo)$weight, n_iterations = 10)
   mem <- membership(particion)
@@ -183,7 +181,6 @@ correr_leiden_mod <- function(grafo, semilla = SEMILLA) {
 }
 
 correr_leiden_cpm <- function(grafo, resolucion, semilla = SEMILLA) {
-  set.seed(semilla)
   particion <- cluster_leiden(grafo, objective_function = "CPM",
                                weights = E(grafo)$weight,
                                resolution_parameter = resolucion, n_iterations = 10)
@@ -191,6 +188,16 @@ correr_leiden_cpm <- function(grafo, resolucion, semilla = SEMILLA) {
   list(membership = mem, Q = modularity(grafo, mem, weights = E(grafo)$weight),
        n_comunidades = length(unique(mem)))
 }
+# FIX (20-ago-2026, auditoria): set.seed() se saca de DENTRO de las 3
+# funciones. Se usan como funcion_metodo() dentro del loop de
+# bootstrap_metodo() (mas abajo); llamar set.seed() en cada una de las 500
+# iteraciones resetea el generador aleatorio GLOBAL antes de que la
+# iteracion siguiente dibuje su muestra -- las muestras dejan de ser
+# independientes entre si. Mismo bug diagnosticado y demostrado en
+# R1c_diagnostico_bootstrap.R para R1b (6 de 50 muestras distintas CON el
+# bug, 50 de 50 sin el). Se agrega set.seed(SEMILLA) una sola vez, explicito,
+# antes de la comparacion puntual (PASO 3), para mantener esa parte
+# reproducible sin reintroducir el problema dentro del bootstrap.
 
 # --- Seleccion de resolucion CPM por sensibilidad ----------------------------
 # CPM no tiene una resolucion "natural" como modularity. Se escanea una
@@ -231,6 +238,7 @@ identificar_comunidad_ancla <- function(membership, categorias_ancla = CATEGORIA
 
 cat("\n=== PASO 3: Comparacion puntual Louvain vs. Leiden ===\n")
 
+set.seed(SEMILLA)  # explicito aqui: ya no vive dentro de correr_louvain/correr_leiden_mod/correr_leiden_cpm
 louvain    <- correr_louvain(red_completa)
 leiden_mod <- correr_leiden_mod(red_completa)
 
