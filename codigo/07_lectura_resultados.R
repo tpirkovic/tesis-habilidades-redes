@@ -20,8 +20,18 @@
 #   PASO 0  → Cargar objetos y definir el diccionario de nombres legibles
 #   PASO 1  → P1 · CA: mapa del espacio de habilidades con etiquetas
 #   PASO 2  → P2 · H1/H1b: modelo multinivel (Modelo A) en consola
-#   PASO 3  → P2 · H2: clase de origen → composición de habilidades de la red
-#   PASO 4  → P2 · H3: composición de la red → perfil de habilidades del ego
+#   PASO 3  → P2 · H2: clase de origen → diversidad de habilidades de la red
+#   PASO 4  → P2 · H3: correspondencia de comunidades entre red y ego (4 modelos)
+#   PASO 5  → P2 · H4: clase de origen → cierre estructural
+#   PASO 6  → P2 · H4b: moderación por peso bio-ambiental-legal de ego
+#
+# ACTUALIZADO (20-ago-2026): PASO 3/4 reescritos -- referenciaban m$H2_comp,
+# m$H3_div, m$H3_comp, objetos de una version anterior de 05_modelos.R que ya
+# no existen (H2 se redujo a Div_Red + Orient_ego descriptivo; H3 pasó de
+# Div_ego/Comp_ego a 4 modelos paralelos de correspondencia de comunidades).
+# El script fallaba en PASO 3 (m$H2_comp es NULL) sin haber corrido nunca
+# PASO 4/5/6 desde ese cambio. Se agregan PASO 5/6 (H4, H4b), inexistentes
+# hasta ahora en este script pese a estar hace tiempo en 05_modelos.R.
 # =============================================================================
 
 suppressPackageStartupMessages({
@@ -53,12 +63,14 @@ etiquetas <- c(
   # --- Modelo A (multinivel, nivel ego × posición) ---
   "(Intercept)"        = "Intercepto",
   "SP_ip_sc"           = "Similitud de PRESTIGIO ego-posición (ISEI, estandarizada)",
-  "SH_ip_sc"           = "Similitud de HABILIDADES ego-posición (espacio CA, estandarizada)",
+  "SH_ip_sc"           = "Similitud de HABILIDADES ego-posición (red phi, distancia geodésica, estandarizada)",
   "educ_sc"            = "Nivel educativo (estandarizado)",
   "SH_ip_sc:educ_sc"   = "Interacción: similitud de habilidades × nivel educativo",
   "logTam_sc"          = "Tamaño del grupo ocupacional en la RM, log (estandarizado)",
-  # --- Modelos a nivel ego (H2, H3) ---
+  # --- Modelos a nivel ego (H2, H3, H4, H4b) ---
   "ISEI_orig_hat"      = "Clase de origen (ISEI de la ocupación del padre/sostenedor)",
+  "ISEI_orig_c"        = "Clase de origen, centrada (ISEI del padre - media)",
+  "ISEI_orig_c2"       = "Clase de origen, centrada al cuadrado (forma de U)",
   "educ"               = "Nivel educativo del ego",
   "sexoMujer"          = "Sexo: mujer (ref. hombre)",
   "edad"               = "Edad",
@@ -66,7 +78,14 @@ etiquetas <- c(
   "Rango_P"            = "Rango de prestigio de la red (ISEI máx. - mín.)",
   "Estatus_Max"        = "Estatus máximo de la red (ISEI más alto alcanzado)",
   "Div_Red"            = "Diversidad de habilidades de la RED (categorías L2, ponderada)",
-  "Comp_Red"           = "Complementariedad de la RED (dispersión en el espacio CA)"
+  "Orient_ego"         = "Orientación sectorial de la RED (Dim2 CA, NO es hipótesis)",
+  "SP_red_ego"         = "Homofilia de PRESTIGIO red-ego (control crítico de H3)",
+  "share_com1_red"     = "Peso Dirección-servicio en la RED",
+  "share_com2_red"     = "Peso Técnico-manual en la RED",
+  "share_com3_red"     = "Peso Analítico-digital-simbólico en la RED",
+  "share_com4_red"     = "Peso Bio-ambiental-legal en la RED",
+  "share_com4_ego"     = "Peso Bio-ambiental-legal en la ocupación de EGO",
+  "ISEI_orig_hat:share_com4_ego" = "Interacción: clase de origen × peso bio-ambiental-legal de ego"
 )
 
 legibiliza <- function(term) ifelse(term %in% names(etiquetas), etiquetas[term], term)
@@ -187,78 +206,128 @@ cat("  · Significativa = la homofilia de habilidades es más (o menos) fuerte s
 
 
 # =============================================================================
-# PASO 3 — P2 · H2: clase de origen → composición de habilidades de la red
+# PASO 3 — P2 · H2: clase de origen → diversidad de habilidades de la red
 # =============================================================================
 # PREGUNTA (H2): ¿las personas de origen social más alto tienen redes con
-#   habilidades más DIVERSAS y/o más COMPLEMENTARIAS, controlando por educación,
-#   sexo y edad?
+#   habilidades más DIVERSAS, controlando por educación, sexo, edad e
+#   indicadores clásicos de prestigio de la red?
 #
-# Dos modelos, uno por cada variable dependiente:
-#   H2a: Diversidad de habilidades de la red  (Div_Red)
-#   H2b: Complementariedad de la red          (Comp_Red)
-# Predictor de interés: clase de origen (ISEI del padre).
+# UN SOLO modelo de hipótesis (Div_Red). Orient_ego se reporta aparte como
+# DESCRIPTIVO, no como hipótesis -- ver Decisión 2 de 05_modelos.R: Dim2 mide
+# orientación sectorial, un eje bipolar sin jerarquía normativa, que no admite
+# una hipótesis direccional del tipo "a menor origen, menor orientación".
 #
-# CÓMO LEERLO: si "Clase de origen" es positivo y significativo en H2a, el
-#   acceso relacional a habilidades diversas está estratificado por origen.
+# CÓMO LEERLO: si "Clase de origen" es significativo en H2, el acceso
+#   relacional a habilidades diversas está estratificado por origen social.
 
-cat("\n\n=== PASO 3: H2 — Clase de origen → composición de habilidades de la red ===\n")
+cat("\n\n=== PASO 3: H2 — Clase de origen -> diversidad de habilidades de la red ===\n")
 
 imprimir_coefs(
   broom::tidy(m$H2_div),
-  "H2a · Variable dependiente: DIVERSIDAD de habilidades de la red (Div_Red)"
+  "H2 · Variable dependiente: DIVERSIDAD de habilidades de la red (Div_Red)  [HIPÓTESIS]"
 )
 imprimir_coefs(
-  broom::tidy(m$H2_comp),
-  "H2b · Variable dependiente: COMPLEMENTARIEDAD de la red (Comp_Red)"
+  broom::tidy(m$H2_orient_desc),
+  "Descriptivo (NO hipótesis) · Orientación sectorial de la red (Orient_ego)"
 )
 
 cat("\nGUÍA DE LECTURA H2:\n")
-cat("  · Mira 'Clase de origen (ISEI del padre)' en cada modelo.\n")
-cat("  · Positivo y significativo = a mayor origen social, red con habilidades\n")
-cat("    más diversas / más complementarias.\n")
+cat("  · Mira 'Clase de origen' en el primer modelo (Div_Red).\n")
+cat("  · Significativo = la diversidad de habilidades de la red está\n")
+cat("    estratificada por origen social.\n")
+cat("  · El segundo modelo (Orient_ego) es descriptivo, no prueba de hipótesis:\n")
+cat("    se reporta para contexto, no se interpreta como confirmación/refutación.\n")
 
 
 # =============================================================================
-# PASO 4 — P2 · H3: composición de la red → perfil de habilidades del ego
+# PASO 4 — P2 · H3: correspondencia de comunidades entre red y ego
 # =============================================================================
-# PREGUNTA (H3): ¿la composición de HABILIDADES de la red (diversidad y
-#   complementariedad) se asocia con el perfil de habilidades del propio ego
-#   (su diversidad y su complejidad ocupacional), MÁS ALLÁ de los indicadores
-#   clásicos de la red basados en prestigio (extensión, rango, estatus máximo)?
+# PREGUNTA (H3): ¿el peso de cada comunidad de habilidades en la RED
+#   corresponde al peso de esa misma comunidad en la OCUPACIÓN DE EGO, más
+#   allá de la homofilia de PRESTIGIO red-ego (SP_red_ego)?
 #
-# Dos modelos, uno por cada variable dependiente del ego:
-#   H3a: Diversidad de habilidades de la ocupación del ego  (Div_ego)
-#   H3b: Complejidad de la ocupación del ego                (Comp_ego, Dim2 CA)
-# En ambos se controla por los indicadores clásicos del GP (prestigio/tamaño),
-# de modo que el coeficiente de Div_Red / Comp_Red capta el aporte ESPECÍFICO
-# del contenido de habilidades de la red.
+# CUATRO modelos paralelos, uno por comunidad (share_comK_ego ~ share_comK_red
+# + SP_red_ego + controles). El contraste crítico en cada uno es SP_red_ego:
+# si sigue siendo no significativo mientras share_comK_red sí lo es, la
+# correspondencia de CONTENIDO no se reduce a proximidad de ESTATUS.
 #
-# CÓMO LEERLO: si 'Diversidad de la red' o 'Complementariedad de la red' son
-#   significativos mientras extensión/rango/estatus NO lo son, entonces el
-#   contenido de habilidades de la red aporta algo que el prestigio de la red
-#   no capta.
+# PENDIENTE (ver README.md): los 4 shares son datos composicionales (suman 1).
+# Válido para exploración; antes de reportar como resultado final requiere
+# regresión Dirichlet o transformación log-ratio (ILR/ALR).
 
-cat("\n\n=== PASO 4: H3 — Composición de la red → perfil de habilidades del ego ===\n")
+cat("\n\n=== PASO 4: H3 — Correspondencia de comunidades (red -> ego) ===\n")
+cat("[PENDIENTE: los 4 modelos de abajo son 4 svyglm independientes sobre datos\n")
+cat(" composicionales -- válido para exploración, no como resultado final. Ver\n")
+cat(" README.md / Decisión 3 de 05_modelos.R.]\n")
 
-imprimir_coefs(
-  broom::tidy(m$H3_div),
-  "H3a · Variable dependiente: DIVERSIDAD de habilidades del EGO (Div_ego)"
-)
-imprimir_coefs(
-  broom::tidy(m$H3_comp),
-  "H3b · Variable dependiente: COMPLEJIDAD ocupacional del EGO (Comp_ego)"
-)
+for (nombre_com in names(m$H3_modelos)) {
+  imprimir_coefs(
+    broom::tidy(m$H3_modelos[[nombre_com]]),
+    sprintf("H3 · Comunidad: %s", nombre_com)
+  )
+}
 
 cat("\nGUÍA DE LECTURA H3:\n")
-cat("  · Compara los indicadores de HABILIDADES de la red (Diversidad,\n")
-cat("    Complementariedad) contra los de PRESTIGIO (Extensión, Rango, Estatus máx.).\n")
-cat("  · Si los de habilidades son significativos y los de prestigio no,\n")
-cat("    el contenido de habilidades de la red aporta información propia.\n")
-cat("  · OJO con el SIGNO: en la corrida actual Div_Red y Comp_Red salieron\n")
-cat("    NEGATIVOS sobre Div_ego. Discutir interpretación (¿especialización\n")
-cat("    del ego en redes diversas?) antes de fijar la redacción.\n")
+cat("  · En cada comunidad, mira 'Peso [comunidad] en la RED' (predictor) y\n")
+cat("    'Homofilia de PRESTIGIO red-ego' (control crítico).\n")
+cat("  · Si el peso de la red es significativo y SP_red_ego NO lo es, la\n")
+cat("    correspondencia de contenido no se reduce a proximidad de estatus.\n")
+
+
+# =============================================================================
+# PASO 5 — P2 · H4: clase de origen → cierre estructural
+# =============================================================================
+# PREGUNTA (H4): ¿las personas de origen social más alto tienen redes con
+#   MENOR cierre estructural (menos solapamiento entre el perfil de
+#   comunidades de ego y el de su red)?
+#
+# Dos especificaciones: lineal (principal) y cuadrática (robustez, forma de U
+# -- Otero, Völker y Rözer 2021).
+
+cat("\n\n=== PASO 5: H4 — Clase de origen -> cierre estructural ===\n")
+
+imprimir_coefs(
+  broom::tidy(m$H4_lineal),
+  "H4 · Especificación lineal  [PRINCIPAL]"
+)
+imprimir_coefs(
+  broom::tidy(m$H4_cuadratico),
+  "H4 · Especificación cuadrática (forma de U)  [ROBUSTEZ]"
+)
+
+cat("\nGUÍA DE LECTURA H4:\n")
+cat("  · Mira 'Clase de origen' en la especificación lineal.\n")
+cat("  · Negativo y significativo = a mayor origen, menor cierre estructural.\n")
+cat("  · En la cuadrática, mira el término al cuadrado: significativo y\n")
+cat("    positivo sugeriría forma de U (alto cierre en ambos extremos).\n")
+
+
+# =============================================================================
+# PASO 6 — P2 · H4b: moderación por peso bio-ambiental-legal de ego
+# =============================================================================
+# PREGUNTA (H4b): ¿la asociación origen-cierre estructural es más fuerte
+#   cuanto mayor es el peso de la comunidad bio-ambiental-legal en la
+#   ocupación de ego?
+#
+# ADVERTENCIA A DECLARAR (ver Decisión 6 de 05_modelos.R): share_com4_ego está
+# fuertemente concentrada cerca de cero (solo 1 de 978 egos la tiene como
+# comunidad dominante). La potencia de esta interacción es limitada.
+
+cat("\n\n=== PASO 6: H4b — Moderación por peso bio-ambiental-legal de ego ===\n")
+cat("[ADVERTENCIA: share_com4_ego concentrada cerca de 0 -- potencia limitada,\n")
+cat(" ver Decisión 6 de 05_modelos.R antes de interpretar.]\n")
+
+imprimir_coefs(
+  broom::tidy(m$H4b),
+  "H4b · Interacción clase de origen × peso bio-ambiental-legal de ego"
+)
+
+cat("\nGUÍA DE LECTURA H4b:\n")
+cat("  · Mira la fila de interacción al final de la tabla.\n")
+cat("  · Significativa = el efecto del origen sobre el cierre depende de\n")
+cat("    cuánto peso bio-ambiental-legal tiene la ocupación de ego.\n")
 
 cat("\n\n", strrep("=", 78), "\n", sep = "")
 cat("FIN — Figuras nuevas: fig_CA_espacio_etiquetado.(pdf/png)\n")
-cat("Todo lo demás se imprimió en esta consola, hipótesis por hipótesis.\n")
+cat("Todo lo demás se imprimió en esta consola, hipótesis por hipótesis (H1 a H4b).\n")
 cat(strrep("=", 78), "\n", sep = "")
