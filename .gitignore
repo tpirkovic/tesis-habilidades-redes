@@ -33,3 +33,6 @@ Thumbs.db
 # Si en algún momento usas renv para fijar versiones de paquetes:
 # renv/library/
 # renv/staging/
+.quarto/
+data/
+.RDataTmp

@@ -1,0 +1,459 @@
+// ============================================================
+// tesis_redes.scss
+// Tema revealjs que replica la estética de la presentación
+// "Grupo Redes UC": fondo crema, cabeceras en versalitas
+// espaciadas con línea inferior, serif Didone para frases,
+// azul UC (#173F8A) y rojo como acentos.
+// Conserva las clases usadas por el qmd original
+// (box-inv-4, sp-after, highlight-last, xlarge, columns).
+// ============================================================
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+
+/*-- scss:defaults --*/
+
+// Paleta base (tomada del PDF de referencia)
+$crema:      #EFEEE7;
+$tinta:      #2E3338;
+$gris-medio: #5a6570;
+$azul:       #1A3FA8;   // azul de los destacados de texto
+$azul-uc:    #173F8A;   // azul institucional (secciones)
+$rojo:       #E8483F;
+
+$backgroundColor: $crema;
+
+$mainFont: 'Archivo', sans-serif;
+$mainFontSize: 27px;
+$mainColor: $tinta;
+
+$blockMargin: 20px;
+
+$headingFont: 'Archivo', sans-serif;
+$headingColor: $tinta;
+$headingLineHeight: 1.25;
+$headingLetterSpacing: 0.16em;
+$headingTextTransform: uppercase;
+$headingTextShadow: none;
+$headingFontWeight: 600;
+
+$heading1Size: 1.45em;
+$heading2Size: 1.02em;
+$heading3Size: 0.85em;
+$heading4Size: 0.6em;
+
+$codeFont: monospace;
+
+$linkColor: $azul;
+$linkColorHover: $azul-uc;
+
+$selectionBackgroundColor: $azul;
+$selectionColor: #fff;
+
+/*-- scss:rules --*/
+
+// ------------------------------------------------------------
+// Cabecera de slide: versalitas espaciadas + línea inferior
+// ------------------------------------------------------------
+.reveal .slides section h2 {
+  border-bottom: 1px solid rgba($tinta, 0.45);
+  padding-bottom: 0.35em;
+  margin-bottom: 0.9em;
+  text-align: left;
+}
+
+// Los títulos de sección (h1 sobre fondo azul) sí van centrados y sin línea
+.reveal .slides section h1 {
+  border-bottom: none;
+  font-weight: 300;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+}
+
+// Divisores de seccion (fondo azul): peso ligero, mas aire, sin logo
+// ni numero de slide compitiendo con el titulo.
+.reveal .slides section.has-dark-background h1 {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 200;
+  font-size: 1.55em;
+  letter-spacing: 0.09em;
+  line-height: 1.28;
+  text-transform: uppercase;
+  max-width: 78%;
+}
+
+.reveal .has-dark-background .slide-logo { opacity: 0.35; }
+
+.reveal .has-dark-background h1,
+.reveal .has-dark-background h2,
+.reveal .has-dark-background p,
+.reveal .has-dark-background li {
+  color: #ffffff;
+}
+
+// ------------------------------------------------------------
+// Portada estilo Canva (serif grande, sin uppercase)
+// ------------------------------------------------------------
+// La portada ocupa el alto completo: bloque de texto centrado
+// verticalmente y pie ("Grupo de Redes UC") anclado abajo, como en el
+// PDF de referencia. Se fuerza con !important porque reveal aplica su
+// propio layout a section.
+.reveal .slides section.title-redes {
+  display: flex !important;
+  flex-direction: column;
+  height: 100%;
+  justify-content: flex-start;
+  padding-top: 4.5vh;
+  text-align: left;
+}
+
+.reveal .slides section.title-redes h2 {
+  border-bottom: none;
+  text-transform: none;
+  letter-spacing: -0.005em;
+  font-family: 'Playfair Display', 'Noto Serif', serif;
+  font-weight: 400;
+  font-size: 1.72em;
+  line-height: 1.14;
+  color: #232828;
+  text-align: left;
+  margin: 0 0 0.34em 0;
+  max-width: 94%;
+}
+
+.title-redes .title-rule {
+  border-top: 1px solid rgba($tinta, 0.35);
+  margin: 0.35em 0 0.95em 0;
+}
+
+.title-redes .autor {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 96%;
+  margin: 0 0 0.85em 0;
+}
+
+// Afiliaciones en serif bold, como en la referencia (antes eran sans)
+.title-redes .afiliacion {
+  font-family: 'Playfair Display', 'Noto Serif', serif;
+  font-weight: 700;
+  font-size: 78%;
+  line-height: 1.35;
+  color: $tinta;
+  margin: 0 0 1.05em 0;
+
+  p { margin: 0 0 0.5em 0; }
+}
+
+.title-redes .equipo {
+  font-size: 66%;
+  line-height: 1.45;
+  color: #3c3c3c;
+  margin: 0;
+
+  p { margin: 0 0 0.42em 0; }
+}
+
+// Pie de portada: empujado al fondo con margin-top auto, centrado
+.title-redes .pie-portada {
+  font-family: 'Playfair Display', 'Noto Serif', serif;
+  font-size: 58%;
+  color: #3c3c3c;
+  text-align: center;
+  margin-top: auto;
+  padding-bottom: 2.2vh;
+}
+
+// Sin numero de slide en la portada
+.reveal .slides section.title-redes .slide-number,
+.reveal.title-slide-active .slide-number {
+  display: none;
+}
+
+// Logo mas grande solo en la portada
+.reveal .slides section.title-redes ~ .slide-logo,
+.reveal .slides section.title-redes .slide-logo {
+  max-height: 3.22em !important;   // 30% mas pequeno en portada (antes 4.6em)
+}
+
+// ------------------------------------------------------------
+// Slides "EN UNA FRASE": kicker pequeño + serif grande
+// ------------------------------------------------------------
+.reveal .slides section.frase h2 {
+  font-size: 0.72em;
+  letter-spacing: 0.28em;
+  border-bottom: 1px solid rgba($tinta, 0.45);
+}
+
+.frase p, .frase .frase-texto {
+  font-family: 'Playfair Display', 'Noto Serif', serif;
+  font-size: 138%;
+  line-height: 1.45;
+  color: #2b3035;
+  text-align: left;
+}
+
+.frase .subfrase {
+  font-family: 'Playfair Display', 'Noto Serif', serif;
+  font-size: 105%;
+  margin-top: 1.1em;
+}
+
+// Colores de acento en texto
+.azul  { color: $azul; }
+.rojo  { color: $rojo; }
+.gris  { color: $gris-medio; }
+.blanco { color: #ffffff; }
+.bold  { font-weight: 700; }
+
+// ------------------------------------------------------------
+// Cajas destacadas (se conserva la nomenclatura del qmd
+// original, reestilizada a la paleta crema/azul)
+// ------------------------------------------------------------
+.box-7, .box-inv-7, .box-6, .box-inv-6, .box-5, .box-inv-5,
+.box-4, .box-inv-4, .box-3, .box-inv-3, .box-2, .box-inv-2,
+.box-1, .box-inv-1 {
+  margin: 0em auto;
+  overflow: hidden;
+  padding: 0.35em 0.7em;
+  font-weight: 600;
+  display: table;
+  text-align: center;
+  border-radius: 4px;
+}
+
+.box-4 {
+  background-color: $azul-uc;
+  color: #ffffff;
+}
+
+.box-inv-4 {
+  background-color: #E2E6F0;
+  color: $azul-uc;
+}
+
+.sp-after-half { margin-bottom: 0.7em !important; }
+.sp-after      { margin-bottom: 1em !important; }
+
+// ------------------------------------------------------------
+// Enunciado de hipótesis en lenguaje simple
+// Serif grande, alineado a la izquierda, con filete rojo.
+// Se usa para abrir cada lámina de hipótesis.
+// ------------------------------------------------------------
+.reveal .enunciado {
+  font-family: 'Playfair Display', 'Noto Serif', serif;
+  font-size: 108%;
+  line-height: 1.38;
+  color: #2b3035;
+  border-left: 4px solid $rojo;
+  padding: 0.05em 0 0.05em 0.85em;
+  margin: 0 0 0.95em 0;
+  text-align: left;
+
+  p { margin: 0; }
+  strong { font-weight: 700; }
+}
+
+// ------------------------------------------------------------
+// Ficha de especificación: bloque alineado a la izquierda
+// para VD, VI, controles y modelo. A diferencia de .box-inv-4
+// no está centrado ni es display:table, de modo que respeta
+// listas de varias líneas.
+// ------------------------------------------------------------
+.reveal .ficha {
+  background-color: rgba(#E2E6F0, 0.6);
+  border-left: 3px solid $azul-uc;
+  border-radius: 0 4px 4px 0;
+  padding: 0.6em 0.95em;
+  margin: 0 0 0.85em 0;
+  text-align: left;
+  display: block;
+  line-height: 1.42;
+
+  p { margin: 0 0 0.42em 0; }
+  p:last-child { margin-bottom: 0; }
+  strong { color: $azul-uc; font-weight: 700; }
+}
+
+// Etiqueta pequeña tipo kicker sobre un bloque
+.etq {
+  font-size: 62%;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: $gris-medio;
+  font-weight: 600;
+  margin-bottom: 0.35em;
+  text-align: left;
+}
+
+// Utilidad: forzar alineación a la izquierda en cajas heredadas
+.izq {
+  display: block !important;
+  text-align: left !important;
+}
+
+// ------------------------------------------------------------
+// Fragmentos: atenuar lo ya visto
+// ------------------------------------------------------------
+.highlight-last {
+  color: #a9aca6;
+  .current-fragment { color: $tinta; }
+}
+
+.highlight-last2 {
+  color: #a9aca6;
+  .current-fragment { color: #ffffff; }
+}
+
+// ------------------------------------------------------------
+// Tablas sobrias
+// ------------------------------------------------------------
+.reveal table {
+  margin: auto;
+  border-top: 1px solid #666;
+  border-bottom: 1px solid #666;
+  border-collapse: collapse;
+}
+.reveal table thead th {
+  border-bottom: 1px solid #999;
+  font-weight: 600;
+}
+.reveal table th, .reveal table td { padding: 6px 10px; border: none; }
+.reveal table tbody tr { background-color: transparent !important; }
+
+// ------------------------------------------------------------
+// Utilidades heredadas
+// ------------------------------------------------------------
+.v-center-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 90%;
+}
+
+.pull-left  { float: left;  width: 47%; }
+.pull-right { float: right; width: 47%; }
+.pull-left-wide  { float: left;  width: 66%; }
+.pull-right-wide { float: right; width: 66%; }
+
+.xlarge { font-size: 115%; }
+.large  { font-size: 95%; }
+.medium { font-size: 85%; }
+.small  { font-size: 75%; }
+.tiny   { font-size: 60%; line-height: 1.2em; }
+
+img, video, iframe { max-width: 100%; }
+
+blockquote {
+  border-left: solid 4px $azul-uc;
+  padding-left: 1em;
+  font-style: italic;
+}
+
+// Logo institucional (opción logo: de Quarto) un poco más discreto
+.reveal .slide-logo {
+  max-height: 2.24em !important;   // 30% mas pequeno que la version anterior (3.2em)
+  bottom: 10px !important;
+  right: 16px !important;
+}
+
+// Número de slide sobre crema
+.reveal .slide-number {
+  color: $gris-medio;
+  background-color: transparent;
+}
+
+// Ocultar encabezados vacíos (slides de imagen a pantalla completa)
+.reveal .slides section h2:empty {
+  display: none;
+  border: none;
+}
+
+// ------------------------------------------------------------
+// Comunidades de habilidades: colores fijos (texto y puntos)
+// Deben coincidir con COM_HEX en el chunk de la lámina de las
+// 27 ocupaciones del qmd.
+// ------------------------------------------------------------
+.c-tec { color: #7A8188; }
+.c-ges { color: $azul; }
+.c-ana { color: #7F96DB; }
+.c-bio { color: $rojo; }
+
+// Tabla compacta de las 27 ocupaciones con franja de puntos
+.reveal .tabla-gp table th,
+.reveal .tabla-gp table td { padding: 2px 8px; }
+.reveal .tabla-gp .franja {
+  font-size: 125%;
+  letter-spacing: -0.04em;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+// ------------------------------------------------------------
+// Versión aligerada: citas anidadas en gris y listas con aire
+// ------------------------------------------------------------
+.reveal .cita { color: $gris-medio; font-size: 78%; white-space: normal; }
+.reveal .lista-aire li { margin-bottom: 0.6em; }
+.reveal .cifra {
+  font-family: 'Playfair Display', 'Noto Serif', serif;
+  font-size: 230%;
+  line-height: 1.1;
+  color: $azul-uc;
+  display: block;
+  margin-bottom: 0.15em;
+}
+
+// ------------------------------------------------------------
+// Idea directa con franja roja (versión corta del enunciado).
+// Para listas de ideas sin párrafo; .azul-bar la deja en azul.
+// ------------------------------------------------------------
+.reveal .idea {
+  font-family: 'Playfair Display', 'Noto Serif', serif;
+  font-size: 88%;
+  line-height: 1.3;
+  color: #2b3035;
+  border-left: 4px solid $rojo;
+  padding: 0.02em 0 0.02em 0.7em;
+  margin: 0 0 0.55em 0;
+  text-align: left;
+
+  p { margin: 0; }
+  strong { font-weight: 600; }
+  .cita { font-family: 'Archivo', sans-serif; font-size: 64%; }
+}
+.reveal .idea.azul-bar { border-left-color: $azul-uc; }
+
+// ------------------------------------------------------------
+// Hipótesis destacadas: como .idea, pero más grandes
+// ------------------------------------------------------------
+.reveal .hipotesis {
+  font-family: 'Playfair Display', 'Noto Serif', serif;
+  font-size: 100%;
+  line-height: 1.32;
+  color: #2b3035;
+  border-left: 5px solid $rojo;
+  padding: 0.05em 0 0.05em 0.75em;
+  margin: 0 0 0.85em 0;
+  text-align: left;
+
+  p { margin: 0; }
+  strong { font-weight: 700; }
+  .cita { font-family: 'Archivo', sans-serif; font-size: 58%; }
+}
+
+// Ficha de variable dependiente (franja roja)
+.reveal .ficha.dep { border-left-color: $rojo; }
+.reveal .ficha.dep strong { color: $rojo; }
+
+// Bajada en simple bajo cada hipótesis
+.reveal .hipotesis { margin-bottom: 0.3em; }
+.reveal .bajada {
+  font-family: 'Archivo', sans-serif;
+  font-size: 62%;
+  line-height: 1.35;
+  color: $azul-uc;
+  margin: 0 0 0.9em 1em;
+  text-align: left;
+  p { margin: 0; }
+}
