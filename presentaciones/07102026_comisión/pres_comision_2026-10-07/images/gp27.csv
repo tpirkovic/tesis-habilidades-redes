@@ -1,0 +1,28 @@
+posicion,orden,etiqueta,isei,clase,isco_habilidades
+Q0101,1,Gerentes de grandes empresas,70,Higher-grade,1120
+Q0102,2,Profesores de básica o media,63,Socio-cultural,2341
+Q0103,3,Mecánicos de autos,38,Skilled workers,7231
+Q0104,4,Vendedores de tiendas,31,Skilled workers,5223
+Q0105,5,Ingenieros,72,Higher-grade,2142
+Q0106,6,Cajeros,31,Clerks,5230
+Q0107,7,Altos funcionarios del gobierno,70,Higher-grade,1112
+Q0108,8,Guardias de seguridad,27,Unskilled workers,5414
+Q0109,9,Profesores universitarios,76,Socio-cultural,2310
+Q0110,10,Trabajadores agrícolas,16,Unskilled workers,9211
+Q0111,11,Comerciantes y dueños de locales,45,Small business*,5221
+Q0112,12,Repartidores de aplicaciones,30,Clerks,9621
+Q0113,13,Conductores de camiones,36,Skilled workers,8332
+Q0114,14,Médicos,89,Socio-cultural,2212
+Q0115,15,Secretarios,42,Clerks,4120
+Q0116,16,Enfermeros o TENS,48,Socio-cultural,5321
+Q0117,17,Cocineros,27,Skilled workers,5120
+Q0118,18,Vendedores ambulantes,26,Unskilled workers,9520
+Q0119,19,Electricistas,43,Skilled workers,7411
+Q0120,20,Abogados,85,Higher-grade,2611
+Q0121,21,Obreros de construcción o fábricas,24,Unskilled workers,9313
+Q0122,22,Aseadores,16,Unskilled workers,9112
+Q0123,23,Arquitectos,71,Higher-grade,2161
+Q0124,24,Parvularios,47,Socio-cultural,2342
+Q0125,25,Carabineros y policías,53,Skilled workers,5412
+Q0126,26,Trabajadores sociales,59,Socio-cultural,2635
+Q0127,27,Contadores,47,Lower-grade*,3313

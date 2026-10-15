@@ -1,45 +1,47 @@
 # =============================================================================
-# .gitignore — pipeline tesis Trajan Pirkovic
+# .gitignore de la tesis: LISTA BLANCA
+# Se ignora todo y solo se habilita lo que se versiona en GitHub. Un archivo o
+# carpeta nueva en Tesis/ NO se sube a menos que se agregue aqui.
+# Nunca se suben: data/ (encuesta Fondecyt), intermedios/ (bases a nivel de
+# encuestado), respaldos, PDF con comentarios ni lecturas.
 # =============================================================================
 
-# Datos de la encuesta Fondecyt: NO subir a GitHub, aunque el repo sea
-# privado. Datos de personas reales (aunque anonimizados) no deberían vivir
-# en control de versiones. Si necesitas historial de esto, usa un remoto
-# privado separado (ej. OneDrive ya cumple ese rol).
-data/fondecyt/
-data_fondecyt.xlsx
-Listado de Variables*.xlsx
+/*
+!/.gitignore
+!/README.md
 
-# Salidas generadas: se regeneran corriendo el pipeline, no hace falta
-# versionarlas. Si en algún momento quieres versionar UNA figura específica
-# para el informe, agrégala con `git add -f`.
-output/
+# Articulo (su propio .gitignore excluye _salida/, tesis.tex y *_files/)
+!/articulo/
 
-# Objetos intermedios de R
+# Pipeline vigente y sus salidas agregadas
+!/scripts/
+/scripts/*
+!/scripts/pipeline_final/
+!/scripts/output_final/
+/scripts/output_final/intermedios/
+/scripts/output_final/figuras/*
+!/scripts/output_final/figuras/art_*.pdf
+
+# Presentaciones ante la comision
+!/presentaciones/
+/presentaciones/*
+!/presentaciones/19082026_comite_tesis/
+!/presentaciones/07102026_comisi*/
+
+# Excluidos dentro de lo habilitado
+_respaldo*/
+_archivo/
+*.zip
+*.bak
+*.bundle
 *.rds
 *.RData
 .Rhistory
 .Rproj.user/
-
-# Archivos temporales del sistema
+.quarto/
+.vscode/
 .DS_Store
 Thumbs.db
-
-# Respaldos y versiones archivadas (ya viven en _archivo/, pero por si
-# quedan sueltos en la raíz con el patrón de nombre típico)
-*_respaldo.R
-*_respaldo_*.R
-
-# Si en algún momento usas renv para fijar versiones de paquetes:
-# renv/library/
-# renv/staging/
-
-# Quarto y temporales
-.quarto/
-.RDataTmp
-
-# Datos fuera del repo
-data/
-
-# Bases a nivel de encuestado del pipeline final (no se versionan)
-scripts/output_final/intermedios/
+tesis_comentarios_*.pdf
+articulo/capitulos/*.html
+_quarto_internal_scss_error.scss

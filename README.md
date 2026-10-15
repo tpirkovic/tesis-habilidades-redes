@@ -19,8 +19,8 @@ respecto de la versión anterior está en
 | Carpeta | Contenido | Fecha |
 |---|---|---|
 | [`articulo/`](articulo/) | Manuscrito (Quarto + LaTeX): capítulos, bibliografía, preámbulo, cifras en R y PDF compilado | 13-oct-2026 |
-| [`presentaciones/pres_comision_2026-10-07/`](presentaciones/pres_comision_2026-10-07/) | Presentación de avances ante la comisión | 07-oct-2026 |
-| [`presentaciones/pres_comision_2026-08-19/`](presentaciones/pres_comision_2026-08-19/) | Presentación de avance ante la comisión y guía de estudio H1/H1b | 19-ago-2026 |
+| [`presentaciones/07102026_comisión/`](presentaciones/07102026_comisión/) | Presentación de avances ante la comisión | 07-oct-2026 |
+| [`presentaciones/19082026_comite_tesis/`](presentaciones/19082026_comite_tesis/) | Presentación de avance ante la comisión y guía de estudio H1/H1b | 19-ago-2026 |
 | [`scripts/pipeline_final/`](scripts/pipeline_final/) | Pipeline de análisis en R vigente (01 a 08 + `run_pipeline.R`), con README y auditoría | 12-oct-2026 |
 | [`scripts/output_final/`](scripts/output_final/) | Salidas agregadas del pipeline que lee el artículo: tablas, figuras `art_*` y registro de la corrida | 12-oct-2026 |
 
@@ -38,6 +38,14 @@ respecto de la versión anterior está en
 Versiones anteriores del código: la rama
 [`pipeline-agosto-2026`](../../tree/pipeline-agosto-2026) conserva la cadena
 `codigo/` (01 a 11 y robustez) usada hasta la presentación del 7 de octubre.
+
+## Cómo se respalda
+
+La carpeta `Tesis/` (OneDrive) es el repositorio. Su `.gitignore` es una lista
+blanca: solo se versionan `articulo/`, `scripts/pipeline_final/`,
+`scripts/output_final/` (sin `intermedios/` y solo las figuras `art_*.pdf`) y las
+dos presentaciones ante la comisión. Para incluir algo nuevo hay que habilitarlo
+explícitamente en `.gitignore`.
 
 ## Datos
 
