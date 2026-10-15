@@ -1,0 +1,33 @@
+<!-- =====================================================================
+Resumen (abstract) y palabras clave del artículo, a la manera de una revista.
+Abre el artículo: título, autor, afiliación, fecha, resumen y palabras clave,
+como una revista; la introducción sigue en la misma página. Unas 250 palabras.
+LaTeX directo: usar \textit{} en vez de *...*; las cifras se leen de cf$.
+Versión 12-oct: incorpora comentarios del autor sobre el PDF.
+====================================================================== -->
+
+\begingroup\setstretch{1.0}
+\begin{center}
+{\LARGE \titulotesis\par}
+\vspace{1.2em}
+{\large \autortesis\par}
+\vspace{0.5em}
+{\small \afiliacionestesis\par}
+\vspace{0.5em}
+{\small Profesora guía: \guiatesis\ · Profesor co-tutor: \cotutortesis\par}
+\vspace{1em}
+{\normalsize \fechatesis\par}
+\vspace{1.5em}
+\textbf{Resumen}
+\end{center}
+\endgroup
+
+\begin{quote}
+\small\setstretch{1.0}\noindent
+Las redes personales son uno de los canales por los que la desigualdad de clase se reproduce, porque por ellas circulan información, recomendaciones y oportunidades que tienden a quedar entre personas de la misma clase. La teoría del cierre social permite entender ese proceso como la reserva de oportunidades para un círculo de elegibles, y su huella observable es la homogeneidad de clase de las redes, es decir, la proporción de conocidos que pertenecen a la propia clase. La investigación ha medido esa homogeneidad casi siempre en una escala vertical, según la clase, el estatus ocupacional o el nivel educativo de los contactos, y se sabe poco sobre si el cierre se organiza también según el contenido del trabajo, es decir, según lo que las personas saben hacer, y en qué posiciones de clase lo hace. Esta tesis aborda ese vacío en la Región Metropolitana de Santiago, una sociedad muy desigual cuyas redes personales están marcadamente segmentadas por clase. Con datos de la Encuesta Social de Clase, Redes y Actitudes Políticas (2025; `r cf$n` trabajadores) y un generador de posiciones de 27 ocupaciones, se construye un espacio de habilidades a partir de la taxonomía ESCO adaptada al mercado laboral nacional (MAPHA), midiendo la similitud de habilidades laborales entre cada trabajador y sus conocidos mediante técnicas de detección de comunidades provenientes del análisis de redes sociales. Su asociación con la homogeneidad de clase se estima con modelos de regresión logit fraccional. Los resultados preliminares muestran que una desviación estándar adicional de similitud de habilidades laborales se asocia con `r cf$h1_pp` puntos porcentuales más de conocidos en la propia clase, más allá de la posición socioeconómica y de la similitud de estatus, y que la asociación es más intensa cuando ambas similitudes coinciden. Siguiendo a Parkin, se esperaba que las credenciales cerraran el acceso a las clases de servicio y que, en las clases manuales, lo hiciera el oficio compartido. Los resultados no coinciden con esa expectativa: la asociación entre la similitud de habilidades laborales y la homogeneidad de clase es más intensa entre los profesionales socioculturales y los empleados administrativos, y prácticamente nula entre los trabajadores calificados. Los hallazgos sugieren que la reproducción de la desigualdad a través de las redes personales pasa no solo por la distancia de estatus entre quienes están arriba y quienes están abajo, sino también por la separación entre mundos de trabajo.
+
+\vspace{0.5em}\noindent
+\textbf{Palabras clave:} cierre social · redes personales · habilidades laborales · homogeneidad de clase · Chile
+\end{quote}
+
+\vspace{1em}

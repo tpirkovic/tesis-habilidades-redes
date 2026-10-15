@@ -1,0 +1,47 @@
+<!-- =====================================================================
+Material suplementario (APA 7: Apéndice A, B, C...). Versión 12-oct.
+La tabla de las 27 posiciones pasó a la sección 5.3 y la de modelos completos,
+a la sección 6.2. Todas las cifras vienen del pipeline.
+====================================================================== -->
+
+\newpage
+
+# Material suplementario {.unnumbered}
+
+## Apéndice A. Flujo de la muestra analítica {.unnumbered}
+
+```{r}
+#| label: tbl-flujo
+#| tbl-cap: "Flujo de la muestra analítica"
+flujo_t <- flujo
+flujo_t$paso <- c("Encuestados", "Con ocupación actual o última", "Con clase (Oesch, siete clases)",
+                  "Con perfil de habilidades y conocidos en el generador",
+                  "Con controles completos (muestra analítica)")
+flujo_t$n <- num(flujo_t$n, 0)
+names(flujo_t) <- c("Paso", "Casos")
+kable_ajustada(flujo_t, format = "latex", booktabs = TRUE, align = c("l", "r"), linesep = "")
+```
+
+\notatabla{Se excluyen los códigos que no corresponden a ocupaciones (9990, 9998 y 9999), los códigos ISCO inexistentes, el código 2340, que no corresponde a un grupo unitario y no tiene perfil de habilidades, y a quienes no declaran conocidos en el generador o carecen de información en los controles.}
+
+## Apéndice B. Tres medidas de red por clase {.unnumbered}
+
+```{r}
+#| label: fig-tres-medidas
+#| fig-cap: "Homogeneidad de clase, similitud de habilidades laborales y distancia de estatus, según la clase del trabajador"
+#| out-width: "90%"
+knitr::include_graphics(figura("fig_tres_medidas_por_clase"))
+```
+
+\notatabla{Medias ponderadas con intervalos de confianza de 95\%. Similitud de habilidades estandarizada (0 = promedio). La distancia de estatus es el inverso de la similitud de estatus: más distancia, menos similitud. La clase de servicio inferior y la de pequeños empresarios tienen una sola posición en el generador. N = `r cf$n`.}
+
+## Apéndice C. Especificaciones alternativas {.unnumbered}
+
+```{r}
+#| label: tbl-robustez
+#| tbl-cap: "Robustez de la asociación entre similitud de habilidades laborales y homogeneidad de clase"
+kable_ajustada(tabla4_texto(), format = "latex", booktabs = TRUE,
+             align = c("l", "r", "r", "r", "r"), linesep = "")
+```
+
+\notatabla{Coeficientes de las similitudes estandarizadas y errores estándar entre paréntesis. R3 es lineal; R7 es un logit multinivel en díadas con conocidos, ponderado por el número de conocidos. Las demás especificaciones son logit fraccionales ponderados con los controles de la Tabla~\ref{tbl-modelos}. + p < 0,10; * p < 0,05; ** p < 0,01; *** p < 0,001.}

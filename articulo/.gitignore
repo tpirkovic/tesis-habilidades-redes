@@ -1,0 +1,19 @@
+# Salidas de Quarto: se regeneran al compilar
+_salida/
+.quarto/
+*_cache/
+*_files/
+tesis.tex
+tesis.pdf
+
+# R
+.Rhistory
+.RData
+.Rproj.user/
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+/.quarto/
+**/*.quarto_ipynb

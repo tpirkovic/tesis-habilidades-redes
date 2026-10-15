@@ -1,0 +1,32 @@
+<!-- =====================================================================
+4. Pregunta, objetivos e hipótesis. Versión 12-oct.
+Recapitula sin repetir: las hipótesis completas están en la sección 2;
+aquí van en la Tabla 1 junto con la estrategia de estimación, descrita en
+palabras porque los modelos (M1 a M6) se presentan recién en la sección 5.6.
+====================================================================== -->
+
+# Pregunta, objetivos e hipótesis
+
+La investigación se orienta por la siguiente pregunta: ¿cómo interactúan el nivel socioeconómico de los trabajadores y su similitud de habilidades laborales y de estatus con la homogeneidad de clase de sus redes personales, en la Región Metropolitana en 2025? El objetivo general es analizar esa interacción, y se descompone en tres objetivos específicos:
+
+- **OE1.** Describir la similitud de habilidades laborales y de estatus entre los trabajadores de la Región Metropolitana y sus conocidos en 2025.
+- **OE2.** Estimar la asociación entre la similitud de habilidades laborales con sus conocidos y la homogeneidad de clase de las redes de los trabajadores de la Región Metropolitana en 2025, más allá de sus características socioeconómicas.
+- **OE3.** Examinar la variación de esa asociación según la clase de los trabajadores y su similitud de estatus con sus conocidos.
+
+OE1 no lleva hipótesis. Su función es establecer si la similitud de habilidades laborales y la similitud de estatus son dimensiones distintas de la composición de las redes, condición para tratar el contenido del trabajo como un criterio de cierre propio. OE2 se responde con H1, y OE3 con tres hipótesis sobre la variación de la asociación, dos referidas a la posición de clase del trabajador (H2a y H2b) y una a la composición de su red (H3). La @tbl-hipotesis resume la correspondencia entre objetivos, hipótesis y estrategia de estimación.
+
+::: {#tbl-hipotesis}
+
+| Objetivo | Hipótesis | Expectativa | Estrategia de estimación |
+|:------|:------|:------------------------------|:------------------------------|
+| OE1 | No aplica | Similitud de habilidades laborales y de estatus correlacionadas, pero distinguibles | Correlaciones y regresiones lineales de cada similitud sobre la otra |
+| OE2 | H1 | Asociación positiva entre similitud de habilidades laborales y homogeneidad de clase | Regresión logit fraccional con la similitud de habilidades, y luego también con la de estatus |
+| OE3 | H2a | Asociación mayor en clases manuales que en clases de servicio | Interacción entre la similitud de habilidades y la clase (siete clases) |
+| OE3 | H2b | Asociación menor en la lógica técnica que en la organizacional y la interpersonal, a igual nivel de calificación | Interacciones de la similitud de habilidades con la lógica de trabajo y con el nivel de calificación (asalariados, dieciséis clases) |
+| OE3 | H3 | Asociación mayor cuanto mayor es la similitud de estatus | Interacción entre ambas similitudes |
+
+Objetivos, hipótesis y estrategia de estimación
+
+:::
+
+\notatabla{Salvo en OE1, todos los modelos son regresiones logit fraccionales para la homogeneidad de clase, estimadas con el ponderador muestral, e incluyen como controles la clase del trabajador, el nivel educativo, el ingreso del trabajo, el sexo y la edad (sección 5.6). Elaboración propia.}

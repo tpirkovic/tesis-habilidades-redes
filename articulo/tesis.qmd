@@ -1,0 +1,45 @@
+---
+title: "Habilidades laborales, clase y estatus en el cierre social de las redes personales: reproducción de la desigualdad social en la Región Metropolitana"
+author:
+  - name: Trajan Pirkovic Palma
+    affiliations:
+      - name: Instituto de Sociología, Pontificia Universidad Católica de Chile
+      - name: "Fondecyt de Iniciación N° 11240249: Class, personal networks and political attitudes"
+guia: Andrea Canales Hernández
+cotutor: Gabriel Otero Cabrol
+date: 2026-10-13
+date-format: long
+---
+
+```{r}
+#| label: setup
+#| include: false
+# Cifras vigentes leídas desde ../scripts/output_final (ver R/cifras.R).
+# Ninguna cifra del texto se escribe a mano: se llama a `cf$...`.
+source("R/cifras.R")
+```
+
+{{< include capitulos/00-resumen-dos-paginas.qmd >}}
+
+{{< include capitulos/00b-resumen-articulo.qmd >}}
+
+{{< include capitulos/01-introduccion.qmd >}}
+
+{{< include capitulos/02-antecedentes.qmd >}}
+
+{{< include capitulos/03-caso-chileno.qmd >}}
+
+{{< include capitulos/04-pregunta-objetivos-hipotesis.qmd >}}
+
+{{< include capitulos/05-datos-metodos.qmd >}}
+
+{{< include capitulos/06-resultados.qmd >}}
+
+{{< include capitulos/07-sintesis.qmd >}}
+
+# Referencias {.unnumbered}
+
+::: {#refs}
+:::
+
+{{< include capitulos/99-anexos.qmd >}}

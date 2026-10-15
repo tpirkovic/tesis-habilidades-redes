@@ -1,0 +1,50 @@
+# =============================================================================
+# Proyecto Quarto del artículo (informe de avance, 13 de octubre de 2026)
+# Compilar desde esta carpeta:   quarto render
+# Vista previa con recarga:      quarto preview tesis.qmd
+# El PDF queda en _salida/; el .tex intermedio se conserva (keep-tex).
+# =============================================================================
+
+project:
+  type: default
+  render:
+    - tesis.qmd
+  output-dir: _salida
+
+lang: es
+bibliography: referencias.bib
+csl: apa.csl
+link-citations: true
+
+execute:
+  echo: false
+  warning: false
+  message: false
+
+format:
+  pdf:
+    pdf-engine: xelatex
+    documentclass: article
+    papersize: letter
+    fontsize: 12pt
+    geometry:
+      - margin=2.5cm
+    linestretch: 1.5
+    # Fuente: Latin Modern (la de LaTeX por defecto, como en la plantilla UC de
+    # Overleaf). Al no declarar mainfont, xelatex usa Latin Modern.
+    # Para volver a Times: mainfont: "Times New Roman"
+    number-sections: true
+    colorlinks: true
+    linkcolor: black
+    citecolor: NavyBlue      # citas como vínculo a las referencias (dvipsnames)
+    urlcolor: NavyBlue
+    keep-tex: true
+    fig-pos: "H"
+    tbl-pos: "H"            # tablas fijas: la nota queda junto a su tabla
+    fig-cap-location: top   # APA: título de figura arriba
+    tbl-cap-location: top
+    fig-width: 6.5
+    fig-height: 4
+    include-in-header: latex/preambulo.tex
+    template-partials:
+      - latex/title.tex

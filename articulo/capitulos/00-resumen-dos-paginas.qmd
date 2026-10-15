@@ -1,0 +1,59 @@
+<!-- =====================================================================
+Resumen de pregunta y objetivos (requisito del programa SOL3081).
+Máximo dos páginas: interlineado simple solo en esta sección.
+Versión 11-oct: encuadre de cierre social y reproducción; H2a/H2b;
+la línea base ya no aparece aquí (pasa a robustez).
+====================================================================== -->
+
+\thispagestyle{primerauc}
+\setstretch{1.0}
+
+\vspace*{1.2em}
+\begin{center}
+{\large\textbf{\titulotesis}\par}
+\vspace{0.8em}
+{\normalsize \autortesis\par}
+\vspace{0.3em}
+{\small Profesora guía: \guiatesis\par}
+{\small Profesor co-tutor: \cotutortesis\par}
+\vspace{0.3em}
+{\small Informe de avance de tesis · \fechatesis\par}
+\end{center}
+
+# Resumen de pregunta y objetivos {.unnumbered}
+
+## Problema {.unnumbered}
+
+Las redes personales son uno de los mecanismos por los que la desigualdad de clase se reproduce: canalizan información, recomendaciones y oportunidades, y lo hacen sobre todo entre quienes ocupan posiciones semejantes [@lin2001; @dimaggio2012]. En Chile, existe contacto entre posiciones sociales distintas, pero las redes son altamente homogéneas y esa homogeneidad es estable en el tiempo [@otero2021; @otero2026]. La teoría del cierre social permite leer esa segmentación como la reserva de oportunidades para un círculo de elegibles [@parkin1979; @tilly1998]. Todo cierre necesita, sin embargo, un criterio que defina quién es elegible, y los estudios sobre redes y clase han supuesto que ese criterio es jerárquico: credenciales, estatus ocupacional o nivel educativo. Esta tradición ofrece otra posibilidad: las habilidades son un activo que define posiciones de clase [@wright2005], y la estructura social se diferencia además según la lógica del trabajo que se realiza [@oesch2006]. Esta tesis examina si la similitud de habilidades laborales entre los trabajadores y sus conocidos es una dimensión del cierre social en las redes personales, distinta del estatus ocupacional y de las credenciales educativas, y en qué posiciones opera. Con ello busca contribuir al estudio de la reproducción de la desigualdad en Chile, un país de alta desigualdad de ingresos, concentrada en el extremo superior de la distribución [@flores2020]. A este campo le aporta una medida de habilidades basada en la taxonomía ESCO, una forma de distinguir la parte de la asociación que reproduce la estructura ocupacional de la que corresponde a la relación entre personas, y una distinción entre las fronteras horizontales, que separan mundos de trabajo, y las verticales, que separan posiciones de mayor y menor jerarquía.
+
+## Pregunta de investigación {.unnumbered}
+
+¿Cómo interactúan el nivel socioeconómico de los trabajadores y su similitud de habilidades laborales y de estatus con la homogeneidad de clase de sus redes personales, en la Región Metropolitana en 2025?
+
+## Objetivo general {.unnumbered}
+
+Analizar cómo interactúan el nivel socioeconómico de los trabajadores y su similitud de habilidades laborales y de estatus con la homogeneidad de clase de sus redes personales, en la Región Metropolitana en 2025.
+
+## Objetivos específicos {.unnumbered}
+
+- **OE1.** Describir la similitud de habilidades laborales y de estatus entre los trabajadores de la Región Metropolitana y sus conocidos en 2025.
+- **OE2.** Estimar la asociación entre la similitud de habilidades laborales con sus conocidos y la homogeneidad de clase de las redes de los trabajadores de la Región Metropolitana en 2025, más allá de sus características socioeconómicas.
+- **OE3.** Examinar la variación de esa asociación según la clase de los trabajadores y su similitud de estatus con sus conocidos.
+
+## Hipótesis {.unnumbered}
+
+- **H1 (OE2).** A mayor similitud de habilidades laborales entre los trabajadores y sus conocidos, mayor es la homogeneidad de clase de sus redes personales, a igual posición socioeconómica [@wright2005; @oesch2006; @weeden2005].
+- **H2a (OE3).** La asociación entre la similitud de habilidades laborales y la homogeneidad de clase es mayor en las clases manuales que en las clases de servicio [@parkin1979; @weeden2002].
+- **H2b (OE3).** La asociación entre la similitud de habilidades laborales y la homogeneidad de clase es menor en la lógica de trabajo técnica que en las lógicas organizacional e interpersonal, a igual nivel de calificación [@oesch2006; @kitschelt2014].
+- **H3 (OE3).** A mayor similitud de estatus entre los trabajadores y sus conocidos, mayor es la asociación entre la similitud de habilidades laborales y la homogeneidad de clase [@blau1977].
+
+## Datos y estrategia {.unnumbered}
+
+Se utiliza la Encuesta Social de Clase, Redes y Actitudes Políticas (Fondecyt de Iniciación N° 11240249), aplicada en la Región Metropolitana en 2025 con un diseño muestral estratificado y multietápico. La muestra analítica reúne a `r cf$n` trabajadores que, mediante un generador de posiciones, informaron cuántos conocidos tienen en 27 ocupaciones [@lin1986]. La clase se mide con el esquema de Oesch y el estatus, con el índice ISEI-08. A cada ocupación se le asigna su perfil de habilidades esenciales según la taxonomía ESCO adaptada al mercado laboral chileno (MAPHA), y la similitud de habilidades laborales entre dos ocupaciones corresponde a su cercanía en una red de `r cf$n_categorias` categorías de habilidades [@alabdulkareem2018]. Las asociaciones se estiman con modelos de regresión logit fraccional, usando el ponderador muestral, con controles por clase, nivel educativo, ingreso, sexo y edad, e interacciones para H2a, H2b y H3.
+
+## Resultados preliminares {.unnumbered}
+
+H1 se sostiene: una desviación estándar adicional de similitud de habilidades laborales se asocia con `r cf$h1_pp` puntos porcentuales más de conocidos en la propia clase, y la asociación persiste al considerar la similitud de estatus. H3 también se sostiene (`r cf$h3`; `r cf$h3_p`). H2a no se sostiene: la asociación es más intensa entre los profesionales socioculturales (`r cf$pendiente[[SC]]`) y los empleados administrativos (`r cf$pendiente[[CL]]`), y prácticamente nula entre los trabajadores calificados (`r cf$pendiente[[SK]]`). La estimación de H2b queda para la entrega final.
+
+\setstretch{1.5}
+\newpage

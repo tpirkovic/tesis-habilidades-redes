@@ -1,0 +1,16 @@
+<!-- =====================================================================
+7. Síntesis y próximos pasos. Versión 12-oct (comentarios del autor).
+Lectura desde el cierre social; describe la asociación sin adelantar
+explicaciones institucionales debatibles (se retiró la lectura de Bol y Weeden
+y Caves et al. como explicación del nulo de H2a).
+====================================================================== -->
+
+# Síntesis y próximos pasos
+
+Los resultados preliminares indican que el cierre de clase en las redes personales no se organiza solo según la jerarquía de estatus. Conforme a H1, los trabajadores cuyos conocidos hacen un trabajo parecido al suyo tienen redes más concentradas en su propia clase. Una desviación estándar adicional de similitud de habilidades laborales se asocia con `r cf$h1_pp` puntos porcentuales más de conocidos en la propia clase, a igual clase, nivel educativo, ingreso, sexo y edad, y la asociación persiste al considerar la similitud de estatus. Conforme a H3, la asociación es más intensa cuando el contenido del trabajo y el estatus coinciden (`r cf$h3`; `r cf$h3_p`), y ninguna de las dos asociaciones se reproduce en la prueba de robustez con redes generadas al azar (sección 6.4).
+
+Si las redes son uno de los canales por los que las oportunidades quedan dentro de cada clase, estos resultados sugieren que ese canal se organiza también en torno al contenido del trabajo. La reproducción de la desigualdad a través de las redes pasaría no solo por la distancia entre quienes están arriba y quienes están abajo, sino por la separación cotidiana entre mundos de trabajo, que se refuerza cuando coincide con la jerarquía.
+
+El resultado de H2a matiza esa lectura. La hipótesis suponía que, sin credenciales que cerraran el acceso, el oficio compartido sería la base de la frontera en las clases manuales. Ocurre lo contrario. La asociación es más intensa entre los profesionales socioculturales y los empleados administrativos y prácticamente nula entre los trabajadores calificados (`r cf$pendiente[[SK]]`), entre quienes compartir el oficio no se traduce en redes más concentradas en la propia clase. Queda abierta una segunda lectura, que H2b permitirá evaluar: que el criterio relevante no sea el nivel de calificación sino la lógica de trabajo. Las dos clases con asociaciones más intensas son, de hecho, las únicas definidas por una sola lógica, organizacional o interpersonal.
+
+Estos resultados son preliminares y se leen como asociaciones. La principal cautela es la cobertura desigual del generador de posiciones, con dos clases representadas por una sola posición (sección 5.7). Antes de la entrega del 2 de diciembre se explorará cómo abordar ese desbalance, con las pruebas descritas en esa sección, y se estimará H2b con las dieciséis clases. Con esos resultados se redactarán la discusión, organizada en torno a la teoría del cierre y a la lectura de Blau sobre fronteras que coinciden y se cruzan, y las conclusiones.

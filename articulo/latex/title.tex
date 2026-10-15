@@ -1,0 +1,17 @@
+% Datos de portada, leídos del YAML de tesis.qmd. Se usa como template-partial
+% desde _quarto.yml. No hay portada separada: \maketitle queda vacío y los datos
+% se imprimen con macros propias en dos lugares:
+%   - encabezado breve del "Resumen de pregunta y objetivos" (capitulos/00-...)
+%   - encabezado del artículo, sobre el resumen (capitulos/00b-...)
+$if(title)$
+\title{$title$}
+$endif$
+\author{$for(by-author)$$by-author.name.literal$$endfor$}
+\date{$date$}
+\newcommand{\titulotesis}{$title$}
+\newcommand{\autortesis}{$for(by-author)$$by-author.name.literal$$endfor$}
+\newcommand{\afiliacionestesis}{$for(by-author)$$for(by-author.affiliations)$$by-author.affiliations.name$$sep$\\ $endfor$$endfor$}
+\newcommand{\guiatesis}{$guia$}
+\newcommand{\cotutortesis}{$cotutor$}
+\newcommand{\fechatesis}{$date$}
+\renewcommand{\maketitle}{}

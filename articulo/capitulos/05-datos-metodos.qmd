@@ -1,0 +1,210 @@
+```{=html}
+<!-- =====================================================================
+5. Datos y métodos. Versión 12-oct (comentarios del autor sobre el PDF).
+Todas las cifras vienen de cf$... (R/cifras.R y R/cifras_extra.R).
+Descripción fiel a scripts/pipeline_final.
+Cambios 12-oct: nombre de la encuesta en español, clases en español,
+explicaciones en lenguaje llano del espacio de habilidades, MAPHA como
+adaptación de ESCO, tabla de posiciones por clase (antes en el anexo),
+grilla del esquema de Oesch, tabla de variables y modelos.
+====================================================================== -->
+```
+
+# Datos y métodos
+
+La cantidad de interés es la diferencia promedio en la homogeneidad de clase entre trabajadores que difieren en una desviación estándar de similitud de habilidades laborales, a igual clase, nivel educativo, ingreso, sexo y edad, y el modo en que esa diferencia varía según la clase del trabajador y su similitud de estatus con sus conocidos. Esta sección describe los datos de los que se obtiene esa cantidad, la construcción de las medidas de red y de habilidades, la estrategia de estimación y las amenazas a su interpretación.
+
+## Datos
+
+El análisis utiliza la Encuesta Social de Clase, Redes y Actitudes Políticas (*Class, Personal Networks and Political Attitudes*), levantada durante el segundo semestre de 2025 en el marco del proyecto Fondecyt de Iniciación N° 11240249, *Class, personal networks and political attitudes* (2024–2027), financiado por el Ministerio de Ciencia, Tecnología, Conocimiento e Innovación a través de la Agencia Nacional de Investigación y Desarrollo (ANID). La encuesta reúne información sobre la posición de clase, las redes personales y las actitudes políticas de `r cf$n_encuestados` personas adultas residentes en zonas urbanas y rurales de la Región Metropolitana. El diseño muestral es estratificado y multietápico. La región se dividió en 10 estratos territoriales, dentro de cada estrato se seleccionaron al azar zonas censales y, dentro de ellas, viviendas, y en cada hogar se entrevistó a la persona adulta que había cumplido años más recientemente. La muestra cubre 42 comunas, y las entrevistas fueron presenciales, asistidas por tableta.[^1] Para las redes personales, la encuesta incluye un generador de posiciones de 27 ocupaciones (sección 5.3). Todas las estimaciones utilizan el ponderador muestral.
+
+[^1]: Más información sobre la encuesta en <https://theclassproject.org/encuesta/>.
+
+## Muestra analítica
+
+La muestra analítica se compone de trabajadores, definidos como las personas con una ocupación actual o, en su defecto, con una última ocupación registrada (@tbl-flujo). De `r cf$n_encuestados` encuestados, `r cf$n_con_ocup` informan una ocupación actual o pasada. De ellos se excluyen quienes tienen códigos que no corresponden a ocupaciones o códigos ISCO inexistentes, quienes tienen un código sin perfil de habilidades y quienes no declaran conocidos en el generador, y finalmente quienes carecen de información en los controles. La muestra analítica queda en `r cf$n` trabajadores. De ellos, `r cf$n_imputados` no estaban ocupados al momento de la encuesta y se les asigna la clase de su última ocupación (sección 5.5); los resultados principales se replican excluyéndolos.
+
+## El generador de posiciones
+
+El generador de posiciones pregunta a cada persona cuántas personas conoce en una lista de ocupaciones [@lin1986; @lin2001pg]. La encuesta incluye 27 ocupaciones, desde gerentes de grandes empresas hasta trabajadores agrícolas. Las respuestas se registran en tramos, a los que se asigna un valor representativo.[^2] En la muestra analítica, los trabajadores informan en promedio `r cf$conoc_media` conocidos, y el total de menciones asciende a `r cf$conocidos`.
+
+[^2]: Los tramos son 0, 1, 2 a 4, 5 a 7, 8 a 10, 11 a 15 y 16 o más, y los valores asignados, 0, 1, 3, 6, 9, 13 y 16.
+
+Cada posición fue codificada por el equipo del proyecto con un código ISCO-08 [@oit2012]. A partir de ese código se asignaron su estatus ocupacional, mediante el índice ISEI-08 [@ganzeboom2010], que actualiza para la clasificación de 2008 el índice propuesto por Ganzeboom et al. [-@ganzeboom1992], y su clase, mediante el esquema de Oesch [-@oesch2006] en dieciséis clases, colapsado luego a siete según el procedimiento del equipo técnico del proyecto. La clase se asignó tratando cada ocupación como asalariada, salvo la de comerciantes, codificada como trabajo por cuenta propia con empleados. Para asignar el perfil de habilidades se aplicaron dos ajustes acotados.[^3] La @tbl-posiciones presenta las 27 posiciones agrupadas según la clase a la que pertenecen. La distribución de las posiciones entre clases es desigual, y la clase de servicio inferior y los pequeños empresarios cuentan con una sola posición cada una (contadores y comerciantes).
+
+[^3]: Cuando el código del equipo agrupa varias ocupaciones, se usó el grupo unitario más frecuente en la Región Metropolitana según la CASEN 2024. La posición de técnicos en enfermería (código 3221), que no tiene habilidades registradas en ESCO, recibe por imputación el perfil de los auxiliares de enfermería (código 5321), ocupación similar en el contexto chileno, conservando la clase y el ISEI de su código original. La imputación sigue la lógica de las correspondencias entre clasificaciones ocupacionales [@dickerson2012].
+
+```{r}
+#| label: tbl-posiciones
+#| tbl-cap: "Las 27 posiciones del generador según su clase"
+kable_ajustada(tabla_posiciones_texto(), format = "latex", booktabs = TRUE,
+             align = c("l", "l", "c", "r", "r", "r", "r", "r"), linesep = "")
+```
+
+\notatabla{ISCO: código ISCO-08 usado para la clase y el estatus. Las cuatro últimas columnas indican el porcentaje de las categorías de habilidades efectivas de la ocupación en cada comunidad (sección 5.4): gestión y cuidado, técnico-material, analítico-simbólico y bio-ambiental-legal. En los códigos que agrupan varias ocupaciones (2140, 2210, 2300, 7410 y 9300), el perfil de habilidades corresponde al grupo unitario más frecuente en la Región Metropolitana según la CASEN 2024; la posición de técnicos en enfermería (3221) usa el perfil de 5321. Dentro de cada clase, las posiciones se ordenan por ISEI.}
+
+## El espacio de habilidades
+
+La similitud de habilidades laborales se mide en un espacio de habilidades construido sobre el universo ocupacional de la Región Metropolitana. Ese universo corresponde a las ocupaciones de los ocupados de la región en la CASEN 2024, con las correcciones necesarias para pasar de la clasificación chilena CIUO-08.CL a ISCO-08, y comprende `r cf$n_ocup_rm` ocupaciones. A cada ocupación se le asignan sus habilidades esenciales según MAPHA v2.06, una base que adapta la taxonomía europea ESCO [@esco; @levrang2014] a la realidad del mercado laboral nacional, ajustando los perfiles de las ocupaciones y sus habilidades [@mapha]. Cada habilidad se agrupa, a su vez, en una de las `r cf$n_categorias` categorías de segundo nivel de ESCO, como "utilizar herramientas manuales" o "enseñar y formar".
+
+Con esa información se construye una matriz que cuenta, para cada ocupación, cuántas de sus habilidades esenciales pertenecen a cada categoría. No todas esas categorías caracterizan a una ocupación por igual, porque algunas son comunes a casi todos los trabajos y otras son distintivas de unos pocos. Para quedarse con las que la distinguen, se compara el peso de cada categoría en la ocupación con su peso en el conjunto de las ocupaciones. El primero es la proporción de las habilidades esenciales de la ocupación que pertenece a la categoría; el segundo, la proporción de todas las habilidades esenciales de todas las ocupaciones que pertenece a ella. Una categoría se considera *efectiva* en una ocupación cuando el primer peso supera al segundo, es decir, cuando la ocupación le dedica más habilidades de las que le corresponderían si todas las ocupaciones tuvieran el mismo perfil [@hidalgo2007]. Por ejemplo, si "utilizar herramientas manuales" reúne el 4% de todas las habilidades esenciales, pero el 20% de las de un mecánico, es efectiva en esa ocupación; si "enseñar y formar" reúne el 5% del total y solo el 3% de las del mecánico, no lo es (cifras ilustrativas).
+
+La @tbl-ejemplo-perfiles muestra el resultado para tres de las 27 posiciones del generador de posiciones (sección 5.3). Cada ocupación queda descrita por entre 9 y 12 categorías efectivas, que la tabla agrupa según la comunidad a la que pertenecen, un concepto que se define más abajo.
+
+```{r}
+#| label: tbl-ejemplo-perfiles
+#| tbl-cap: "Categorías de habilidades efectivas de tres posiciones del generador"
+knitr::kable(tabla_ejemplo_perfiles(), format = "latex", booktabs = TRUE, longtable = TRUE,
+      align = c(">{\\raggedright\\arraybackslash}p{3cm}",
+                ">{\\raggedright\\arraybackslash}p{2.5cm}",
+                ">{\\raggedright\\arraybackslash}p{9.3cm}"),
+      linesep = c("", "\\midrule", "", "\\midrule", "", "", ""))
+```
+
+\notatabla{Categorías de segundo nivel de ESCO que resultan efectivas en cada ocupación, con su código entre paréntesis. Para médicos (ISCO 2210) y obreros de construcción (ISCO 9300), el perfil corresponde al grupo unitario más frecuente en la Región Metropolitana según la CASEN 2024 (ISCO 2212 y 9313). Elaboración propia con MAPHA v2.06.}
+
+La @fig-matriz muestra el resultado para todas las ocupaciones. Cada fila es una ocupación, cada columna una categoría, y una celda coloreada indica que la categoría es efectiva en esa ocupación.
+
+```{r}
+#| label: fig-matriz
+#| fig-cap: "Matriz de ocupaciones y categorías de habilidades efectivas"
+#| out-width: "72%"
+knitr::include_graphics(figura("fig_bimodal_matriz"))
+```
+
+\notatabla{Cada fila es una de las `r cf$n_ocup_rm` ocupaciones del universo de la Región Metropolitana y cada columna, una de las `r cf$n_categorias` categorías de habilidades de segundo nivel de ESCO. Una celda coloreada indica que la categoría es efectiva en la ocupación. Ocupaciones ordenadas según su comunidad dominante y categorías, según su comunidad. Se destacan en las filas los nombres de las ocupaciones del generador de posiciones. Elaboración propia con MAPHA v2.06 y CASEN 2024.}
+
+A partir de esa matriz se mide qué tan a menudo dos categorías aparecen juntas en las mismas ocupaciones. Esa medida es el coeficiente $\varphi$, la correlación entre las dos columnas de la matriz que corresponden a esas categorías: vale más cuanto más frecuente es que las ocupaciones que tienen efectiva una categoría tengan efectiva también la otra, y es negativo cuando tienden a no coincidir. Entre dos categorías se genera un vínculo cuando su $\varphi$ es positivo, es decir, cuando coinciden más de lo que lo harían por azar, y la línea es más gruesa cuanto mayor es $\varphi$. Un ejemplo con cifras ilustrativas, no con los valores reales, muestra la regla. Supongamos 100 ocupaciones, y que "utilizar herramientas manuales" es efectiva en 40 y "construir y reparar estructuras", en 30. Por azar, ambas coincidirían en unas 12 ocupaciones; si coinciden en 25, su $\varphi$ es alto (cerca de 0,6) y se unen con una línea gruesa. En cambio, si "enseñar y formar" es efectiva en 30 ocupaciones y solo coincide con "utilizar herramientas manuales" en 2, coinciden menos de lo esperable, su $\varphi$ es negativo (cerca de $-0{,}45$) y no se traza ninguna línea. Dos categorías unidas por una línea son complementarias, en el sentido de que suelen ejercerse juntas en un mismo trabajo. Si cada categoría se representa como un punto, se obtiene una red de complementariedad de `r cf$n_categorias` categorías y `r cf$n_aristas` relaciones, que se conserva completa, con todas las relaciones de $\varphi$ positivo [@alabdulkareem2018].
+
+En esa red, algunas categorías forman grupos muy conectados entre sí y poco conectados con el resto, como ocurre en un grupo de amigos, donde casi todos se conocen entre sí y hay pocos vínculos con otros grupos. Para identificarlos se usa el algoritmo de Leiden [@traag2019], una técnica de detección de comunidades del análisis de redes sociales que busca la partición de la red en grupos cuyas relaciones internas sean más fuertes que las que los unen con los demás grupos. El algoritmo identifica `r cf$n_comunidades` comunidades de habilidades: gestión y cuidado, técnico-material, analítico-simbólico y bio-ambiental-legal (@fig-mapa-habilidades). Así, el 77% de las categorías efectivas de los profesores de educación media o básica pertenece a la comunidad de gestión y cuidado, y el 71% de las de los mecánicos de autos, a la técnico-material (@tbl-posiciones). La calidad de la partición se resume en la modularidad, que vale 0 cuando los grupos no están más conectados internamente de lo que lo estarían al azar y aumenta cuanto más nítida es la separación. En este caso alcanza `r cf$modularidad`. Las comunidades no se definen a priori, sino que resultan de qué habilidades aparecen juntas en las ocupaciones.
+
+```{r}
+#| label: fig-mapa-habilidades
+#| fig-cap: "Red de complementariedad entre categorías de habilidades (versión resumida)"
+#| out-width: "90%"
+knitr::include_graphics(figura("fig_mapa_habilidades"))
+```
+
+\notatabla{Cada punto es una categoría de habilidades de segundo nivel de ESCO; su tamaño indica el número de relaciones, y entre paréntesis se indica el número de categorías de cada comunidad. Se rotulan las cuatro categorías más centrales de cada comunidad y las tres que más conectan comunidades distintas. La disposición considera todas las relaciones con $\varphi$ positivo; se dibujan el 10\% con mayor $\varphi$ y las que unen a cada categoría con su vecina más próxima, para que ninguna quede aislada. Comunidades detectadas con el algoritmo de Leiden. Elaboración propia con MAPHA v2.06 y CASEN 2024.}
+
+Sobre esa red se mide la similitud de habilidades laborales entre dos ocupaciones. La idea es que dos ocupaciones son parecidas cuando sus categorías efectivas se ubican en la misma zona de la red, aunque no sean exactamente las mismas. Para calcularla se toma cada par de categorías, una de cada ocupación, y se mide la distancia del camino más corto que las une en la red. En ese camino, cada relación es más larga cuanto menos complementarias son las categorías que une, de modo que la distancia entre dos categorías que suelen ejercerse juntas es corta. La similitud es el promedio de esas distancias, con signo negativo para que valores más altos indiquen ocupaciones más parecidas. Así, dos ocupaciones que no comparten ninguna categoría idéntica pueden resultar cercanas si sus categorías están unidas por caminos cortos, por ejemplo dentro de la comunidad técnico-material. Esta medida tiene una propiedad que conviene declarar. Como promedia todas las distancias, una ocupación con un perfil muy disperso puede quedar más cerca de otra ocupación que de sí misma, lo que ocurre en 8 de las 27 posiciones. Por ello se estima también, como prueba de robustez, una versión centrada que corrige esa dispersión y garantiza que cada ocupación sea la más parecida a sí misma.
+
+La @fig-bimodal-ejemplo ilustra la información de la que parte la medida con cinco de las 27 posiciones del generador. Electricistas y mecánicos comparten buena parte de sus categorías, casi todas técnico-materiales; abogados y profesores coinciden en categorías de gestión y cuidado, y los médicos se conectan con el resto por muy pocas categorías. La figura permite ver qué categorías se comparten; la medida considera, además, qué tan cerca están en la red las que no se comparten.
+
+```{r}
+#| label: fig-bimodal-ejemplo
+#| fig-cap: "Perfiles de habilidades de cinco posiciones del generador"
+#| out-width: "92%"
+knitr::include_graphics(figura("fig_bimodal_ejemplo"))
+```
+
+\notatabla{Grafo bimodal. Círculos: ocupaciones; cuadrados: categorías de habilidades de su perfil, coloreadas según su comunidad. Cada línea une una ocupación con una de sus categorías. Elaboración propia con MAPHA v2.06.}
+
+La @fig-bimodal-27 extiende la misma lectura a las 27 posiciones. Las ocupaciones, en la fila superior, se unen con sus categorías efectivas, agrupadas por comunidad en la fila inferior. Las ocupaciones manuales se conectan sobre todo con la comunidad técnico-material, las de servicios y profesionales con las de gestión y cuidado y analítico-simbólica, y la comunidad bio-ambiental-legal recibe vínculos de ocupaciones muy distintas.
+
+```{r}
+#| label: fig-bimodal-27
+#| fig-cap: "Categorías de habilidades efectivas de las 27 posiciones del generador"
+#| out-width: "100%"
+knitr::include_graphics(figura("fig_bimodal_27_filas"))
+```
+
+\notatabla{Grafo bimodal. Fila superior: las 27 posiciones del generador de posiciones; fila inferior: sus categorías de habilidades efectivas, agrupadas y coloreadas según su comunidad. Cada línea une una posición con una de sus categorías y lleva el color de la comunidad de la categoría. Elaboración propia.}
+
+En síntesis, la similitud de habilidades laborales y las comunidades se obtienen en cinco pasos.
+
+1. **Perfil de cada ocupación.** Cada ocupación del universo de la región se describe por sus habilidades esenciales según ESCO (con ajuste MAPHA), agrupadas en `r cf$n_categorias` categorías.
+2. **Categorías efectivas.** Una categoría es efectiva en una ocupación cuando pesa en ella más que en el conjunto de las ocupaciones.
+3. **Red de complementariedad.** Dos categorías se unen cuando su $\varphi$ es positivo, es decir, cuando suelen ser efectivas en las mismas ocupaciones.
+4. **Comunidades.** El algoritmo de Leiden agrupa las categorías en `r cf$n_comunidades` comunidades. Estas sirven para describir los perfiles de las ocupaciones (@tbl-posiciones), pero no entran en el cálculo de la similitud.
+5. **Similitud entre ocupaciones.** Para cada par de categorías efectivas, una de cada ocupación, se mide el camino más corto en la red, donde cada relación mide $1 - \varphi$. La similitud es el promedio de esas distancias, con signo negativo. Luego se agrega a nivel del trabajador, como se describe en la sección 5.5.
+
+\vspace{\baselineskip}
+
+La medida supone que el contenido de las ocupaciones descrito por la taxonomía es aplicable a Chile. La adaptación de MAPHA reduce ese problema, porque ajusta los perfiles de ESCO al mercado laboral chileno, y la evidencia comparada indica, además, que el orden relativo de las tareas de una ocupación tiende a mantenerse entre países [@taylor2008], que las medidas de similitud de habilidades construidas con taxonomías extranjeras reproducen patrones de movilidad en América Latina [@gukovas2025] y que ESCO es la taxonomía de referencia en los esfuerzos regionales de información sobre habilidades [@altamirano2020].
+
+## Variables
+
+Para cada trabajador $i$, sea $n_{ij}$ el valor asignado a sus conocidos en la posición $j$. La variable dependiente, la homogeneidad de clase, es la proporción de los conocidos que pertenecen a la clase del trabajador^[$H_i$ es la homogeneidad de clase del trabajador $i$, que va de 0 (ninguno de sus conocidos es de su clase) a 1 (todos lo son). $c_i$ es la clase del trabajador, $c_j$ la clase de la posición $j$, y $\mathbf{1}[c_j = c_i]$ vale 1 cuando ambas coinciden y 0 cuando no.]:
+
+$$
+H_i = \frac{\sum_{j} n_{ij}\,\mathbf{1}[c_j = c_i]}{\sum_{j} n_{ij}}
+$$ {#eq-homogeneidad}
+
+Las dos variables independientes son promedios ponderados por el número de conocidos. La similitud de habilidades laborales promedia la similitud entre la ocupación del trabajador, $o_i$, y la de cada posición, $o_j$; la similitud de estatus promedia menos la distancia absoluta entre sus puntajes ISEI^[$SH_i$ es la similitud de habilidades laborales del trabajador $i$ con sus conocidos, y $SP_i$ su similitud de estatus. $s(o_i, o_j)$ es la similitud de habilidades entre la ocupación del trabajador y la de la posición $j$ (sección 5.4), y $\mathrm{ISEI}_i$ e $\mathrm{ISEI}_j$ son sus puntajes de estatus. En ambas, un valor más alto indica mayor similitud.]:
+
+$$
+SH_i = \frac{\sum_{j} n_{ij}\,s(o_i, o_j)}{\sum_{j} n_{ij}}, \qquad
+SP_i = -\frac{\sum_{j} n_{ij}\,\lvert \mathrm{ISEI}_i - \mathrm{ISEI}_j \rvert}{\sum_{j} n_{ij}}
+$$ {#eq-similitudes}
+
+Ambas se estandarizan en la muestra analítica, de modo que sus coeficientes se leen por desviación estándar. Las tres medidas provienen de las mismas respuestas al generador y solo difieren en el atributo de la posición que se promedia; la unidad de análisis es, por tanto, el trabajador.
+
+La clase del trabajador corresponde al esquema de Oesch. Para los ocupados se utiliza la clase propia construida por el equipo del proyecto en dieciséis clases, y no la del principal sostenedor del hogar, porque la pregunta se refiere al contenido del trabajo de cada persona. Para quienes no están ocupados, la clase se imputa a partir de su última ocupación y del tipo de empleo que tenían, con el paquete DIGCLASS. Las dieciséis clases se agrupan en siete, según el procedimiento del equipo técnico de la encuesta. La clase de servicio superior reúne a grandes empleadores, profesionales independientes, expertos técnicos y directivos superiores; la clase de servicio inferior, a técnicos y directivos asociados; los profesionales socioculturales, a profesionales y semiprofesionales de la educación, la salud y los servicios sociales; los empleados administrativos, a sus pares calificados y no calificados; los pequeños empresarios, a pequeños empleadores y trabajadores por cuenta propia; los trabajadores calificados, a trabajadores manuales y de servicios calificados, y los trabajadores no calificados, a sus pares no calificados.
+
+Esta agrupación conserva solo en parte el eje horizontal del esquema. Los profesionales socioculturales y los empleados administrativos se definen por una sola lógica de trabajo, mientras que la clase de servicio superior y las dos clases de trabajadores reúnen lógicas distintas. Por esa razón, la prueba de H2b recurre a las dieciséis clases. Entre los asalariados, el esquema forma la grilla de la @tbl-grilla, con tres lógicas de trabajo en las columnas y cuatro niveles de calificación en las filas, lo que permite comparar lógicas a igual nivel.
+
+::: {#tbl-grilla}
+| Nivel de calificación | Lógica técnica | Lógica organizacional | Lógica interpersonal |
+|:-----------------|:-----------------|:-----------------|:-----------------|
+| Profesionales y directivos | Expertos técnicos (5) | Directivos superiores (9) | Profesionales socioculturales (13) |
+| Semiprofesionales y directivos asociados | Técnicos (6) | Directivos asociados (10) | Semiprofesionales socioculturales (14) |
+| Calificados | Trabajadores manuales calificados (7) | Empleados administrativos calificados (11) | Trabajadores de servicios calificados (15) |
+| No calificados | Trabajadores manuales no calificados (8) | Empleados administrativos no calificados (12) | Trabajadores de servicios no calificados (16) |
+
+Las clases asalariadas del esquema de Oesch según lógica de trabajo y nivel de calificación
+:::
+
+\notatabla{Entre paréntesis, el número de la clase en el esquema de dieciséis clases. Las clases 1 a 4 corresponden al trabajo independiente (grandes empleadores, profesionales independientes y pequeños empresarios con y sin empleados). En la agrupación de siete clases, la clase de servicio superior reúne las clases 1, 2, 5 y 9; la de servicio inferior, 6 y 10; los profesionales socioculturales, 13 y 14; los empleados administrativos, 11 y 12; los pequeños empresarios, 3 y 4; los trabajadores calificados, 7 y 15, y los no calificados, 8 y 16. Elaboración propia a partir de Oesch (2006).}
+
+El estatus ocupacional del trabajador (ISEI) se obtiene del mismo código ocupacional con que se le asigna la clase. Los controles son el nivel educativo en cinco categorías (básica o menos como referencia), el logaritmo del ingreso del trabajo, el sexo y la edad. La @tbl-descriptivos presenta los descriptivos ponderados.
+
+```{r}
+#| label: tbl-descriptivos
+#| tbl-cap: "Descriptivos ponderados de la muestra analítica"
+kable_ajustada(tabla2_texto(), format = "latex", booktabs = TRUE, align = c("l", "r"), linesep = "")
+```
+
+\notatabla{Medias ponderadas con desviación estándar entre paréntesis para las variables continuas; porcentajes ponderados para las binarias y las categóricas. La similitud de habilidades se presenta en su escala original. N = `r cf$n`. Fuente: Encuesta Social de Clase, Redes y Actitudes Políticas, 2025.}
+
+## Estrategia analítica
+
+Como la homogeneidad de clase es una proporción que puede tomar los valores 0 y 1, se modela con una regresión logit fraccional, estimada por cuasi máxima verosimilitud [@papke1996]:
+
+$$
+\mathrm{E}[H_i \mid \mathbf{x}_i] = \Lambda\left(\beta_0 + \beta_1 SH_i + \beta_2 SP_i + \beta_3\, SH_i \times SP_i + \boldsymbol{\gamma}'\mathbf{z}_i\right)
+$$ {#eq-modelo}
+
+donde $\Lambda$ es la función logística y $\mathbf{z}_i$ reúne la clase y los controles. Los modelos se estiman con el paquete `survey` de R, con el ponderador muestral [@lumley2004], y siguen la secuencia de la @tbl-modelos-resumen. M1 contiene solo la clase y los controles, y cada modelo siguiente agrega los términos que ponen a prueba una hipótesis. Las interacciones se estiman en modelos separados. H2b se pondrá a prueba con M6, estimado en los asalariados, y se sostiene si el bloque de interacciones con la lógica de trabajo es distinto de cero en una prueba de Wald conjunta, a igual interacción con el nivel de calificación, y si la pendiente de la lógica técnica es menor que las de las lógicas organizacional e interpersonal.
+
+::: {#tbl-modelos-resumen}
+| Componente | Contenido | Hipótesis |
+|:--------------|:------------------------------------------|:--------------|
+| Variable dependiente | Homogeneidad de clase: proporción de conocidos que pertenecen a la clase del trabajador (@eq-homogeneidad) |  |
+| Variables independientes | Similitud de habilidades laborales y similitud de estatus entre el trabajador y sus conocidos (@eq-similitudes), estandarizadas |  |
+| Controles | Clase (siete clases), nivel educativo (cinco categorías), ingreso del trabajo (logaritmo), sexo y edad |  |
+| M1 | Clase y controles | Base |
+| M2 | M1 más similitud de habilidades laborales | H1 |
+| M3 | M2 más similitud de estatus | H1 |
+| M4 | M3 más interacción entre similitud de habilidades y similitud de estatus | H3 |
+| M5 | Interacción entre similitud de habilidades y clase (siete clases) | H2a |
+| M6 | Interacciones de la similitud de habilidades con la lógica de trabajo y con el nivel de calificación, en los asalariados (dieciséis clases) | H2b |
+
+Variables y modelos
+:::
+
+\notatabla{Todos los modelos son regresiones logit fraccionales estimadas con el ponderador muestral. M6 se estimará para la entrega final. Elaboración propia.}
+
+Para traducir los coeficientes a la escala de la variable dependiente, se calcula, para cada trabajador, cuánto cambia la homogeneidad de clase que predice el modelo si su similitud aumenta una desviación estándar, y se promedia ese cambio entre los trabajadores con el ponderador muestral, expresado en puntos porcentuales.
+
+## Amenazas a la inferencia
+
+La amenaza más directa es que la asociación sea un producto de la composición del generador, porque las ocupaciones difieren en tamaño y en visibilidad y los trabajadores, en cuántos conocidos declaran. Para evaluarlo se construye una línea base con 300 redes generadas al azar que conservan el número de conocidos de cada trabajador y las menciones que recibe cada posición [@patefield1981; @snijders1991]. Si los coeficientes observados se ubican dentro de esa distribución, la asociación no puede atribuirse al contenido del trabajo. Las especificaciones alternativas de la @tbl-robustez evalúan además la sensibilidad de la asociación a la muestra (trabajadores con tres o más conocidos o sin clase imputada), al número de conocidos, a la medida de homogeneidad (descontada por la disponibilidad de cada clase o basada en tramos de estatus), a la versión centrada de la similitud de habilidades y a un modelo en el nivel de las díadas. Otra amenaza es la cobertura del generador. La clase de servicio inferior y la de pequeños empresarios tienen una sola posición, y las medidas de composición son sensibles a la lista de ocupaciones [@marsden2024]. Con las estimaciones actuales este riesgo no puede descartarse, y se explorará con la propuesta prevista para la entrega final: reestimar H1 y H2a excluyendo una posición a la vez y con formularios abreviados por estratos de posiciones, y revisar la concordancia entre la clase del trabajador y la de las posiciones.
+
+## Software y reproducibilidad
+
+Todo el análisis se realiza en R 4.6.1, con los paquetes `survey`, `igraph`, `DIGCLASS` y `glmmTMB`, entre otros [@lumley2004]. Un flujo de guiones, con semillas fijas para el algoritmo de Leiden y para la línea base, produce todas las bases, tablas y figuras a partir de los insumos originales, y cada guion verifica sus resultados contra las versiones anteriores del análisis. Este documento lee directamente esas salidas, de modo que ninguna cifra se transcribe a mano.
+
+## Consideraciones éticas
+
+El estudio utiliza datos secundarios anonimizados del proyecto Fondecyt de Iniciación N° 11240249, cedidos por el equipo de investigación. Los microdatos no se incluyen en los repositorios del análisis.

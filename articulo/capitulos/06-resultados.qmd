@@ -1,0 +1,94 @@
+<!-- =====================================================================
+6. Resultados preliminares. Versión 12-oct (comentarios del autor).
+Regla: cifra, magnitud, lectura sociológica y vínculo con la hipótesis.
+Cambios 12-oct: clases en español, tabla de correlaciones (OE1), Tabla de
+modelos completa en el texto (antes abreviada, con la completa en el anexo).
+Alias de clase: HG, LG, SC, CL, SB, SK, UN (R/cifras_extra.R).
+====================================================================== -->
+
+# Resultados preliminares
+
+## El espacio ocupacional y las redes
+
+El estatus ocupacional y el contenido del trabajo no coinciden (@fig-27-posiciones). Electricistas (ISEI `r pos_isei("Q0119")`) y secretarios (`r pos_isei("Q0115")`) ocupan prácticamente la misma altura en la escala de estatus, pero el perfil de los primeros se concentra en la comunidad técnico-material (`r pos_sh("Q0119", 2)` de sus categorías efectivas) y el de los segundos, en la analítico-simbólica (`r pos_sh("Q0115", 3)`). Entre gerentes de grandes empresas (`r pos_isei("Q0101")`) e ingenieros (`r pos_isei("Q0105")`) ocurre algo parecido. El perfil de los gerentes se ubica sobre todo en gestión y cuidado (`r pos_sh("Q0101", 1)`), y el de los ingenieros, en las comunidades analítico-simbólica (`r pos_sh("Q0105", 3)`) y técnico-material (`r pos_sh("Q0105", 2)`). La comunidad bio-ambiental-legal aparece en ocupaciones tan distantes en estatus como los trabajadores agrícolas (`r pos_isei("Q0110")`) y los abogados (`r pos_isei("Q0120")`).
+
+```{r}
+#| label: fig-27-posiciones
+#| fig-cap: "Perfil de habilidades de las 27 posiciones del generador, ordenadas por estatus ocupacional"
+#| out-width: "90%"
+knitr::include_graphics(figura("fig_27_posiciones"))
+```
+
+\notatabla{Porción de las categorías de habilidades efectivas de cada ocupación que pertenece a cada comunidad. ISEI-08 entre paréntesis. Elaboración propia con MAPHA v2.06.}
+
+Las redes, en cambio, siguen marcadas por la clase (@fig-quien-conoce). Para leer la figura, conviene compararla con una situación de referencia en que la clase no importara para formar relaciones, de modo que cada clase repartiera sus conocidos entre las demás en las mismas proporciones que el conjunto de la muestra. Cada celda indica cuántas veces más (valores sobre 1) o menos (valores bajo 1) conocen los trabajadores de una clase a personas de otra de lo que ocurriría en esa situación. En todas las clases, la proporción de conocidos en la propia clase supera la esperada. El cierre más marcado está en la cima, ya que los trabajadores de la clase de servicio superior conocen a personas de su propia clase `r oe(HG, HG)` veces más de lo esperado, y a trabajadores no calificados, `r oe(HG, UN)` veces lo esperado. Las redes forman un bloque de servicio y otro manual con poco cruce entre ellos, y dentro del bloque manual la frontera de clase es porosa. Los trabajadores calificados conocen a trabajadores no calificados (`r oe(SK, UN)`) tanto como a personas de su propia clase (`r oe(SK, SK)`).
+
+```{r}
+#| label: fig-quien-conoce
+#| fig-cap: "Conocidos observados sobre esperados, según la clase del trabajador y la de la posición"
+#| out-width: "80%"
+knitr::include_graphics(figura("fig_quien_conoce_a_quien"))
+```
+
+\notatabla{Razón entre el porcentaje observado de conocidos en cada clase y el esperado si cada clase repartiera sus conocidos como el total de la muestra. Ponderado. La clase de servicio inferior y la de pequeños empresarios tienen una sola posición en el generador. N = `r cf$n`.}
+
+La homogeneidad de clase es más alta entre los profesionales socioculturales (`r cf$hom_cl[[SC]]`) y los trabajadores no calificados (`r cf$hom_cl[[UN]]`), y muy baja en la clase de servicio inferior (`r cf$hom_cl[[LG]]`) y entre los pequeños empresarios (`r cf$hom_cl[[SB]]`), clases representadas por una sola posición en el generador cuyos valores no se interpretan (@fig-tres-medidas, en el material suplementario). Los profesionales socioculturales tienen además las redes más parecidas a ellos en habilidades, `r cf$sh_cl[[SC]]` desviaciones estándar sobre el promedio.
+
+Las dos similitudes miden cosas distintas (@tbl-correlaciones), que muestra también su relación con la cantidad de conocidos, el estatus del trabajador y su nivel educativo. Su correlación es de `r cf$corr_sh_sp`, y en las regresiones de OE1, a igual clase, nivel educativo, ingreso, sexo y edad, una desviación estándar adicional de similitud de estatus se asocia con `r cf$oe1_sp` desviaciones estándar de similitud de habilidades laborales, y a la inversa, con `r cf$oe1_sh`. Ambas se correlacionan con la homogeneidad de clase (`r cf$corr_hom_sh` y `r cf$corr_hom_sp`). Tener conocidos de estatus parecido no implica tener conocidos que hagan un trabajo parecido, lo que permite examinar el contenido del trabajo como un criterio de cierre distinto del estatus.
+
+```{r}
+#| label: tbl-correlaciones
+#| tbl-cap: "Correlaciones entre las medidas de red y las características del trabajador"
+tc <- tabla_correlaciones()
+kable_ajustada(tc, format = "latex", booktabs = TRUE,
+             align = c("l", rep("r", ncol(tc) - 1)), linesep = "")
+```
+
+\notatabla{Correlaciones de Pearson ponderadas. La cantidad de conocidos se mide en logaritmo; el nivel educativo, en cinco categorías ordenadas (1 = básica o menos, 5 = universitaria). N = `r cf$n`.}
+
+## Similitud de habilidades y homogeneidad de clase
+
+En línea con H1, la similitud de habilidades laborales se asocia positivamente con la homogeneidad de clase (@tbl-modelos, M2: `r cf$h1`, EE `r cf$h1_ee`). Una desviación estándar adicional de similitud de habilidades se asocia con `r cf$h1_pp` puntos porcentuales más de conocidos en la propia clase, una magnitud considerable frente a una homogeneidad media de `r cf$hom_media`. La proporción de devianza explicada aumenta de `r cf$r2_m1` a `r cf$r2_m2`.
+
+La asociación persiste al incorporar la similitud de estatus (M3). En ese modelo, una desviación estándar adicional de similitud de habilidades laborales se asocia con `r cf$m3_pp_sh` puntos porcentuales más de homogeneidad de clase, y una de similitud de estatus, con `r cf$m3_pp_sp`. Parte de la asociación de las habilidades se superpone con el estatus, pero la que permanece es sustantiva. En términos de cierre, el contenido del trabajo no es un sustituto de la jerarquía de estatus, sino un criterio adicional que segmenta las redes por clase.
+
+```{r}
+#| label: tbl-modelos
+#| tbl-cap: "Homogeneidad de clase de la red: modelos logit fraccionales anidados"
+kable_ajustada(tabla3_completa(), format = "latex", booktabs = TRUE,
+             align = c("l", "r", "r", "r", "r"), linesep = "")
+```
+
+\notatabla{Coeficientes en escala logit y errores estándar entre paréntesis. Similitudes y edad estandarizadas. Categorías de referencia: trabajadores no calificados y educación básica o menos. Los coeficientes de clase dependen de cuántas posiciones tiene cada clase en el generador y no se interpretan sustantivamente. Estimaciones ponderadas. N = `r cf$n`. + p < 0,10; * p < 0,05; ** p < 0,01; *** p < 0,001.}
+
+## Variación según similitud de estatus y según clase
+
+En línea con H3, la asociación de la similitud de habilidades laborales con la homogeneidad de clase es más intensa cuanto mayor es la similitud de estatus (M4: interacción `r cf$h3`, EE `r cf$h3_ee`; `r cf$h3_p`). Con una similitud de estatus en el promedio, el coeficiente de la similitud de habilidades es `r cf$h3_sh_media`; con una desviación estándar por encima, `r cf$h3_sh_alta`, y con una por debajo, `r cf$h3_sh_baja`, en escala logit. Cuando los conocidos que hacen un trabajo parecido también tienen un estatus parecido, las dos fronteras se refuerzan, como anticipa Blau para los casos en que las diferencias en un atributo coinciden con las diferencias en otro. El resultado se refiere a la composición agregada de la red de cada trabajador y no contradice la evidencia de que, en la formación de cada lazo, compartir varios atributos tiene rendimientos decrecientes [@block2014].
+
+H2a no se sostiene (@fig-pendientes-h2). Las pendientes difieren entre clases (`r cf$h2_p` en la prueba conjunta), pero no según la división entre clases manuales y de servicio. Las asociaciones más intensas están entre los profesionales socioculturales (`r cf$pendiente[[SC]]`) y los empleados administrativos (`r cf$pendiente[[CL]]`); los trabajadores no calificados (`r cf$pendiente[[UN]]`) se ubican en el mismo nivel que la clase de servicio superior (`r cf$pendiente[[HG]]`), y entre los trabajadores calificados la asociación es prácticamente nula (`r cf$pendiente[[SK]]`, con un intervalo de confianza entre `r cf$pend_li[[SK]]` y `r cf$pend_ls[[SK]]`). Entre los trabajadores calificados, el oficio compartido no cierra la frontera de clase, lo que es coherente con la porosidad de esa frontera en los descriptivos.
+
+```{r}
+#| label: fig-pendientes-h2
+#| fig-cap: "Asociación entre la similitud de habilidades laborales y la homogeneidad de clase, según la clase del trabajador"
+#| out-width: "85%"
+knitr::include_graphics(figura("fig_pendientes_h2"))
+```
+
+\notatabla{Pendiente de la similitud de habilidades laborales en cada clase, en escala logit, con intervalos de confianza de 95\%, a partir de un logit fraccional ponderado con interacción entre similitud de habilidades y clase, con los mismos controles de la Tabla~\ref{tbl-modelos}. La clase de servicio inferior y la de pequeños empresarios tienen una sola posición en el generador. N = `r cf$n`.}
+
+Las dos clases con las asociaciones más intensas son, además, las únicas definidas por una sola lógica de trabajo, interpersonal en el caso de los profesionales socioculturales y organizacional en el de los empleados administrativos. Las dos clases de trabajadores reúnen trabajo manual técnico y trabajo de servicios, de modo que su pendiente promedio podría ocultar comportamientos distintos según la lógica. Esa es la comparación que plantea H2b, que anticipa una asociación menor en la lógica técnica que en las otras dos. Su estimación con las dieciséis clases queda para la entrega final.
+
+## Robustez
+
+La asociación de H1 no es un producto de la composición del generador. En las 300 redes generadas al azar, que conservan el número de conocidos de cada trabajador y las menciones que recibe cada posición, el coeficiente de la similitud de habilidades en M2 tiene una media de `r cf$n3_h1_nula`, y el 97,5% de los valores es inferior a `r cf$n3_h1_p975`; el coeficiente observado, `r cf$h1`, supera al de todas ellas (@fig-linea-base). Lo mismo ocurre con los coeficientes de ambas similitudes en M3. La interacción de H3 tampoco se reproduce en las redes al azar, porque su media es `r cf$n3_int_nula` y el valor observado solo es igualado o superado en una proporción de `r cf$n3_int_p` de ellas. Las redes al azar reproducen, con todo, una parte no despreciable de cada coeficiente, lo que indica que la distribución de los conocidos entre ocupaciones ya contiene algo de la asociación.
+
+```{r}
+#| label: fig-linea-base
+#| fig-cap: "Coeficientes observados frente a su distribución en 300 redes generadas al azar"
+#| out-width: "100%"
+knitr::include_graphics(figura("fig_linea_base_n3"))
+```
+
+\notatabla{Histogramas: coeficientes en redes generadas al azar que conservan el número de conocidos de cada trabajador y las menciones que recibe cada posición (algoritmo de Patefield). Líneas verticales: coeficientes observados. Escala logit por desviación estándar.}
+
+La asociación se mantiene también en las especificaciones alternativas de la @tbl-robustez, en el material suplementario. El coeficiente apenas varía al restringir la muestra a quienes tienen tres o más conocidos, al excluir a los trabajadores con clase imputada (`r cf$r2_m2_sinimp`), al controlar por el número de conocidos y al usar la medida de homogeneidad del equipo del proyecto, basada en tramos de estatus (`r cf$r6_m2`). Se mantiene, en otra escala, al descontar de la homogeneidad la disponibilidad de cada clase en la población y al estimar el modelo en el nivel de las díadas entre trabajadores y posiciones. La versión centrada de la similitud de habilidades, que garantiza que cada ocupación sea la más parecida a sí misma, produce una asociación algo menor (`r cf$r5_m2`), que se reduce más al incorporar la similitud de estatus (`r cf$r5_m3`). La magnitud de la asociación neta del estatus depende, por tanto, en parte de cómo se construye la medida, un punto que se examinará en la entrega final.
