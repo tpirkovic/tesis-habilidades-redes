@@ -1,6 +1,6 @@
 # Artículo: informe de avance de tesis (13 de octubre de 2026)
 
-Proyecto Quarto que produce el informe de avance en PDF, compilado con LaTeX (xelatex). Vive en `Tesis/articulo/`, junto a `Tesis/scripts/`, y lee las cifras, tablas y figuras desde `scripts/output_final/`. **Ninguna cifra del texto se escribe a mano**: si el pipeline cambia, basta volver a compilar.
+Proyecto Quarto que produce el informe de avance en PDF, compilado con LaTeX (xelatex). Vive en `articulo/`, junto a `scripts/`, y lee las cifras, tablas y figuras desde `scripts/output_final/`. **Ninguna cifra del texto se escribe a mano**: si el pipeline cambia, basta volver a compilar.
 
 ## Compilar
 

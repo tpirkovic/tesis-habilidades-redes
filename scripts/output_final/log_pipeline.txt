@@ -1,0 +1,424 @@
+PIPELINE FINAL | 2026-10-12 14:08 | R 4 . 6.1 
+
+
+################################################################################
+# 01_espacio_habilidades.R
+################################################################################
+
+==============================================================================
+1. Universo ocupacional RM (CASEN 2024)
+==============================================================================
+Ocupados RM con codigo valido: 19880 (4308039 ponderados) | codigos: 401
+
+==============================================================================
+2. Matriz ocupacion x categoria L2 (MAPHA v2.06, habilidades esenciales)
+==============================================================================
+  Habilidades asignadas a L2: ESCO 13417 de 14534 | Relink 737 de 997
+Matriz RM: 391 ocupaciones x 112 categorias L2
+
+==============================================================================
+3. Matriz B (RCA > 1) y red de complementariedad phi
+==============================================================================
+B: 391 x 112 | red: 112 nodos, 2836 aristas, 1 componente(s)
+
+==============================================================================
+5. Comunidades de habilidades (Leiden, modularidad)
+==============================================================================
+Modularidad: 0.3875 | categorias por comunidad: 30, 38, 35, 9
+Validacion: misma particion que codigo_v2/08 en 112 de 112 categorias
+  [OK] Modularidad (codigo_v2/08 reportaba 0,388): obtenido 0.388 | esperado 0.388
+# A tibble: 4 × 4
+  comunidad           n_categorias phi_intra ancla
+  <chr>                      <int>     <dbl> <chr>
+1 Gestión y cuidado             30     0.110 S4.9 
+2 Técnico-material              38     0.139 053  
+3 Analítico-simbólico           35     0.114 S2.3 
+4 Bio-ambiental-legal            9     0.250 081  
+
+==============================================================================
+6. Distancias geodesicas y similitud de habilidades
+==============================================================================
+
+Guardado: intermedios/espacio_habilidades.rds
+
+[01_espacio_habilidades.R] OK en 4.7 s
+
+
+################################################################################
+# 02_crosswalk_posiciones.R
+################################################################################
+  [OK] Oesch16 de las 27 posiciones igual a DIGCLASS (posiciones que coinciden): obtenido 27 | esperado 27
+  [OK] Tabla ISEI de data/ igual a DIGCLASS (codigos distintos): obtenido 0 | esperado 0
+Posiciones por clase:
+
+         1. Higher-grade service class           2. Lower-grade service class 3. Socio-cultural (semi) professionals                              4. Clerks 
+                                     5                                      1                                      6                                      3 
+              5. Small business owners                     6. Skilled workers                   7. Unskilled workers 
+                                     1                                      6                                      5 
+  [OK] Posiciones por clase (5, 1, 6, 3, 1, 6, 5): obtenido 5 1 6 3 1 6 5 | esperado 5 1 6 3 1 6 5
+Guardado: intermedios/crosswalk_gp27.csv y tablas/tabla_posiciones_gp.csv
+
+[02_crosswalk_posiciones.R] OK en 0.1 s
+
+
+################################################################################
+# 03_base_analitica.R
+################################################################################
+
+==============================================================================
+1. Encuesta Fondecyt
+==============================================================================
+Encuestados: 1251 | con ocupacion actual o ultima: 1028
+Egos con codigo corregido para habilidades: 17 | ISEI con codigo original
+
+==============================================================================
+2. Clase de ego (siete clases)
+==============================================================================
+# A tibble: 5 × 2
+  fuente_clase                         n
+  <chr>                            <int>
+1 actual (equipo Fondecyt)           787
+2 imputada DIGCLASS, asalariado      166
+3 imputada DIGCLASS, cuenta propia    22
+4 imputada DIGCLASS, empleador         5
+5 sin clase                           48
+Egos sin ISEI: 46 (codigos de no ocupacion 9990, 9998, 9999)
+
+==============================================================================
+4. Diadas trabajador x posicion
+==============================================================================
+Diadas: 27756 | con similitud de habilidades: 26406
+
+==============================================================================
+5. Indicadores de red por trabajador
+==============================================================================
+# A tibble: 5 × 2
+  paso                                               n
+  <chr>                                          <int>
+1 Encuestados                                     1251
+2 Con ocupacion actual o ultima                   1028
+3 Con clase Oesch7                                 980
+4 Con perfil de habilidades y conocidos en el GP   974
+5 Con controles completos (muestra analitica)      971
+Clase imputada en la muestra: 189
+
+==============================================================================
+Validacion contra paralelo_v3 (112)
+==============================================================================
+  [OK] Muestra analitica (v3: 971): obtenido 971 | esperado 971
+  [OK] Max |SH - SH v3|: obtenido 0 | esperado 0
+  [OK] Max |homogeneidad - cierre_bruto v3|: obtenido 0 | esperado 0
+  Egos con similitud de estatus distinta a v3: 17 (esperado: 17)
+
+Guardado: intermedios/base_ego.rds y intermedios/base_diadas.rds
+
+[03_base_analitica.R] OK en 0.3 s
+
+
+################################################################################
+# 04_descriptivos.R
+################################################################################
+
+==============================================================================
+Tabla 2. Descriptivos ponderados
+==============================================================================
+# A tibble: 9 × 5
+  variable                                   media         de      min         max
+  <chr>                                      <dbl>      <dbl>    <dbl>       <dbl>
+1 Homogeneidad de clase (0 a 1)              0.265      0.222     0          1    
+2 Similitud de habilidades (bruta)          -1.19       0.076    -1.47      -0.843
+3 Distancia de estatus (puntos ISEI)        16.0        7.04      0         48.8  
+4 Conocidos en el generador                 33.0       30.9       1        263    
+5 Mujer                                      0.494      0.5       0          1    
+6 Edad                                      45.5       14.5      18         81    
+7 Sin ingreso del trabajo                    0.239      0.426     0          1    
+8 Ingreso del trabajo (con ingreso, $) 1010148.    695238.    50000    5500000    
+9 Clase imputada                             0.223      0.416     0          1    
+# A tibble: 12 × 3
+   variable                   categoria                                pct
+   <chr>                      <chr>                                  <dbl>
+ 1 Clase Oesch (siete clases) 1. Higher-grade service class           10.7
+ 2 Clase Oesch (siete clases) 2. Lower-grade service class             8.5
+ 3 Clase Oesch (siete clases) 3. Socio-cultural (semi) professionals  10.6
+ 4 Clase Oesch (siete clases) 4. Clerks                                8.4
+ 5 Clase Oesch (siete clases) 5. Small business owners                15.1
+ 6 Clase Oesch (siete clases) 6. Skilled workers                      19.6
+ 7 Clase Oesch (siete clases) 7. Unskilled workers                    27.1
+ 8 Nivel educativo            Basica o menos                           9.6
+ 9 Nivel educativo            Media incompleta                         9.9
+10 Nivel educativo            Media completa                          36.3
+11 Nivel educativo            Tecnica superior                        16.3
+12 Nivel educativo            Universitaria                           28  
+N = 971 | conocidos mencionados = 30207
+      hom    SH    SP
+hom 1.000 0.434 0.393
+SH  0.434 1.000 0.252
+SP  0.393 0.252 1.000
+
+==============================================================================
+Quien conoce a quien: clase de ego x clase de la posicion
+==============================================================================
+# A tibble: 7 × 8
+  clase_ego                              `1. Higher-grade service class` `2. Lower-grade service class` `3. Socio-cultural (semi) professionals` `4. Clerks`
+  <chr>                                                            <dbl>                          <dbl>                                    <dbl>       <dbl>
+1 1. Higher-grade service class                                     2.34                           1.71                                     1.13        0.69
+2 2. Lower-grade service class                                      1.23                           1.33                                     1.26        0.89
+3 3. Socio-cultural (semi) professionals                            1.35                           1.04                                     1.55        1.04
+4 4. Clerks                                                         0.73                           0.85                                     0.96        1.68
+5 5. Small business owners                                          0.83                           0.91                                     0.81        0.98
+6 6. Skilled workers                                                0.54                           0.81                                     0.9         0.97
+7 7. Unskilled workers                                              0.42                           0.66                                     0.68        1.01
+  `5. Small business owners` `6. Skilled workers` `7. Unskilled workers`
+                       <dbl>                <dbl>                  <dbl>
+1                       0.77                 0.73                   0.52
+2                       0.91                 0.94                   0.69
+3                       0.83                 0.67                   0.6 
+4                       0.79                 0.97                   1.02
+5                       1.17                 1.12                   1.15
+6                       1.14                 1.16                   1.19
+7                       1.12                 1.21                   1.43
+
+==============================================================================
+Tres medidas de red por clase
+==============================================================================
+# A tibble: 21 × 6
+   medida    clase                                   media    ee     li     ls
+   <chr>     <chr>                                   <dbl> <dbl>  <dbl>  <dbl>
+ 1 hom       1. Higher-grade service class           0.303 0.02   0.264  0.343
+ 2 hom       2. Lower-grade service class            0.039 0.006  0.026  0.052
+ 3 hom       3. Socio-cultural (semi) professionals  0.392 0.019  0.355  0.428
+ 4 hom       4. Clerks                               0.175 0.018  0.14   0.21 
+ 5 hom       5. Small business owners                0.068 0.007  0.055  0.081
+ 6 hom       6. Skilled workers                      0.299 0.014  0.271  0.327
+ 7 hom       7. Unskilled workers                    0.384 0.016  0.353  0.416
+ 8 SH_z      1. Higher-grade service class           0.135 0.091 -0.043  0.312
+ 9 SH_z      2. Lower-grade service class           -0.315 0.148 -0.606 -0.025
+10 SH_z      3. Socio-cultural (semi) professionals  0.629 0.104  0.426  0.832
+11 SH_z      4. Clerks                              -0.187 0.099 -0.382  0.008
+12 SH_z      5. Small business owners               -0.331 0.062 -0.453 -0.209
+13 SH_z      6. Skilled workers                      0.047 0.08  -0.109  0.203
+14 SH_z      7. Unskilled workers                    0.02  0.071 -0.12   0.159
+15 dist_isei 1. Higher-grade service class          19.9   0.79  18.3   21.4  
+16 dist_isei 2. Lower-grade service class           17.4   0.438 16.5   18.2  
+17 dist_isei 3. Socio-cultural (semi) professionals 18.0   0.558 16.9   19.1  
+18 dist_isei 4. Clerks                              14.0   0.694 12.7   15.4  
+19 dist_isei 5. Small business owners               15.7   0.62  14.5   17.0  
+20 dist_isei 6. Skilled workers                     14.1   0.594 12.9   15.2  
+21 dist_isei 7. Unskilled workers                   15.5   0.523 14.5   16.5  
+
+Listo: tablas y figuras descriptivas
+
+[04_descriptivos.R] OK en 0.8 s
+
+
+################################################################################
+# 05_modelos.R
+################################################################################
+
+==============================================================================
+Modelos principales
+==============================================================================
+# A tibble: 24 × 6
+   termino                                          `M1 base`         `M2 H1`           `M3 + estatus`    `M4 H3`           `M5 H2`          
+   <chr>                                            <chr>             <chr>             <chr>             <chr>             <chr>            
+ 1 (Intercept)                                      0.027 (0.166)     -0.117 (0.165)    -0.327 (0.135)*   -0.365 (0.141)**  -0.114 (0.174)   
+ 2 clase1. Higher-grade service class               -0.170 (0.166)    -0.117 (0.162)    -0.134 (0.159)    -0.134 (0.158)    -0.089 (0.160)   
+ 3 clase2. Lower-grade service class                -2.506 (0.197)*** -2.404 (0.181)*** -2.488 (0.181)*** -2.477 (0.181)*** -2.405 (0.181)***
+ 4 clase3. Socio-cultural (semi) professionals      0.311 (0.153)*    0.123 (0.140)     0.049 (0.144)     0.074 (0.144)     -0.090 (0.132)   
+ 5 clase4. Clerks                                   -0.988 (0.146)*** -0.960 (0.127)*** -1.141 (0.119)*** -1.139 (0.117)*** -0.976 (0.126)***
+ 6 clase5. Small business owners                    -2.106 (0.131)*** -1.961 (0.133)*** -2.077 (0.137)*** -2.060 (0.139)*** -2.020 (0.143)***
+ 7 clase6. Skilled workers                          -0.326 (0.094)*** -0.341 (0.094)*** -0.462 (0.087)*** -0.440 (0.088)*** -0.292 (0.090)** 
+ 8 mujer                                            -0.043 (0.074)    0.060 (0.070)     0.172 (0.062)**   0.183 (0.062)**   0.022 (0.069)    
+ 9 edad_sc                                          0.036 (0.037)     0.003 (0.037)     0.031 (0.035)     0.031 (0.036)     -0.001 (0.035)   
+10 educ5Media incompleta                            -0.308 (0.177)+   -0.268 (0.176)    -0.260 (0.156)+   -0.243 (0.159)    -0.237 (0.184)   
+11 educ5Media completa                              -0.428 (0.160)**  -0.332 (0.158)*   -0.302 (0.138)*   -0.298 (0.140)*   -0.340 (0.163)*  
+12 educ5Tecnica superior                            -0.653 (0.178)*** -0.621 (0.174)*** -0.444 (0.152)**  -0.434 (0.153)**  -0.606 (0.182)***
+13 educ5Universitaria                               -0.747 (0.197)*** -0.769 (0.195)*** -0.315 (0.178)+   -0.288 (0.179)    -0.812 (0.199)***
+14 ln_ing_c                                         0.187 (0.078)*    0.162 (0.072)*    0.132 (0.067)*    0.144 (0.067)*    0.166 (0.072)*   
+15 sin_ingreso                                      -0.383 (0.105)*** -0.321 (0.103)**  -0.180 (0.093)+   -0.196 (0.094)*   -0.284 (0.104)** 
+16 SH_z                                             <NA>              0.402 (0.045)***  0.270 (0.041)***  0.237 (0.040)***  0.437 (0.081)*** 
+17 SP_z                                             <NA>              <NA>              0.487 (0.044)***  0.494 (0.045)***  <NA>             
+18 SH_z:SP_z                                        <NA>              <NA>              <NA>              0.085 (0.033)**   <NA>             
+19 SH_z:clase1. Higher-grade service class          <NA>              <NA>              <NA>              <NA>              0.010 (0.126)    
+20 SH_z:clase2. Lower-grade service class           <NA>              <NA>              <NA>              <NA>              0.070 (0.136)    
+21 SH_z:clase3. Socio-cultural (semi) professionals <NA>              <NA>              <NA>              <NA>              0.340 (0.099)*** 
+22 SH_z:clase4. Clerks                              <NA>              <NA>              <NA>              <NA>              0.307 (0.127)*   
+23 SH_z:clase5. Small business owners               <NA>              <NA>              <NA>              <NA>              -0.338 (0.160)*  
+24 SH_z:clase6. Skilled workers                     <NA>              <NA>              <NA>              <NA>              -0.362 (0.128)** 
+# A tibble: 7 × 5
+  modelo       r2_o_devianza     n pp_SH pp_SP
+  <chr>                <dbl> <int> <dbl> <dbl>
+1 OE1 SH               0.188   971 NA    NA   
+2 OE1 SP               0.247   971 NA    NA   
+3 M1 base              0.386   971 NA    NA   
+4 M2 H1                0.476   971  7.28 NA   
+5 M3 + estatus         0.569   971  4.64  8.60
+6 M4 H3                0.574   971 NA    NA   
+7 M5 H2                0.507   971 NA    NA   
+
+Chequeos contra las estimaciones del 7-oct-2026 (128):
+  [OK] N: obtenido 971 | esperado 971
+  [OK] H1: similitud de habilidades: obtenido 0.4022 | esperado 0.402
+  [OK] H1: pp por 1 DE: obtenido 7.2844 | esperado 7.28
+  (ISEI con codigo original: M3, M4 y OE1 cambian respecto del 7-oct; ver AUDITORIA)
+
+==============================================================================
+Pendiente de la similitud de habilidades en cada clase (M5)
+==============================================================================
+# A tibble: 7 × 6
+  clase                                  pendiente    ee  egos     li    ls
+  <chr>                                      <dbl> <dbl> <int>  <dbl> <dbl>
+1 7. Unskilled workers                       0.437 0.081   260  0.278 0.595
+2 1. Higher-grade service class              0.447 0.099    96  0.252 0.642
+3 2. Lower-grade service class               0.507 0.107    80  0.297 0.717
+4 3. Socio-cultural (semi) professionals     0.777 0.058   111  0.664 0.89 
+5 4. Clerks                                  0.743 0.097    94  0.554 0.933
+6 5. Small business owners                   0.098 0.142   138 -0.18  0.377
+7 6. Skilled workers                         0.075 0.097   192 -0.116 0.265
+Test conjunto SH x clase: p = 0.0000
+
+==============================================================================
+Robustez de M2 y M3
+==============================================================================
+# A tibble: 8 × 4
+  muestra                                          `M2 H1 SH_z`              `M3 + estatus SH_z`       `M3 + estatus SP_z`      
+  <chr>                                            <chr>                     <chr>                     <chr>                    
+1 principal                                        0.402 (0.045)*** [n=971]  0.270 (0.041)*** [n=971]  0.487 (0.044)*** [n=971] 
+2 R1 3 o mas conocidos                             0.405 (0.043)*** [n=962]  0.276 (0.039)*** [n=962]  0.473 (0.044)*** [n=962] 
+3 R2 sin clase imputada                            0.392 (0.048)*** [n=782]  0.282 (0.044)*** [n=782]  0.460 (0.046)*** [n=782] 
+4 R3 descontada por disponibilidad (lineal)        0.073 (0.008)*** [n=971]  0.050 (0.007)*** [n=971]  0.079 (0.007)*** [n=971] 
+5 R4 con numero de conocidos                       0.378 (0.044)*** [n=971]  0.264 (0.040)*** [n=971]  0.468 (0.043)*** [n=971] 
+6 R5 similitud de habilidades centrada             0.330 (0.044)*** [n=971]  0.145 (0.041)*** [n=971]  0.515 (0.044)*** [n=971] 
+7 R6 homogeneidad del equipo (3 tramos de estatus) 0.408 (0.043)*** [n=967]  0.260 (0.040)*** [n=967]  0.525 (0.043)*** [n=967] 
+8 R7 diadas conocidas (multinivel)                 1.050 (0.021)*** [n=9810] 0.795 (0.022)*** [n=9810] 1.395 (0.030)*** [n=9810]
+
+Guardado: tablas de modelos y robustez
+
+[05_modelos.R] OK en 2.6 s
+
+
+################################################################################
+# 06_linea_base.R
+################################################################################
+
+==============================================================================
+Linea base N3
+==============================================================================
+M2: similitud de habilidades M3: similitud de habilidades     M3: similitud de estatus              M4: interaccion 
+                       0.402                        0.270                        0.487                        0.085 
+# A tibble: 4 × 8
+  termino                      observado media_nula   p2.5 p97.5 p_empirico parte_estructural_pct parte_relacional_pct
+  <chr>                            <dbl>      <dbl>  <dbl> <dbl>      <dbl>                 <dbl>                <dbl>
+1 M2: similitud de habilidades     0.402      0.196  0.126 0.272       0                     48.7                 51.3
+2 M3: similitud de habilidades     0.27       0.148  0.081 0.221       0                     54.9                 45.1
+3 M3: similitud de estatus         0.487      0.175  0.103 0.254       0                     35.9                 64.1
+4 M4: interaccion                  0.085     -0.016 -0.091 0.069       0.01                  NA                   NA  
+Parte relacional, estatus menos habilidades (M3): 19.0 pp [-12.1; 51.4] en 300 tablas
+Listo
+
+[06_linea_base.R] OK en 2.6 s
+
+
+################################################################################
+# 07_figuras_articulo.R
+################################################################################
+
+==============================================================================
+Figuras del artículo (prefijo art_)
+==============================================================================
+  [OK] art_fig_mapa_habilidades 
+  [OK] art_fig_mapa_posiciones 
+  [OK] art_fig_27_posiciones 
+  [OK] art_fig_quien_conoce_a_quien 
+  [OK] art_fig_tres_medidas_por_clase 
+  [OK] art_fig_pendientes_h2 
+  [OK] art_fig_linea_base_n3 
+
+Listo. Volver a compilar el artículo: quarto render tesis.qmd
+
+[07_figuras_articulo.R] OK en 1.6 s
+
+
+################################################################################
+# 08_grafo_bimodal.R
+################################################################################
+# A tibble: 3 × 8
+  red      ocupaciones categorias vinculos densidad categorias_por_ocupacion categorias_compartidas componentes
+  <chr>          <int>      <int>    <int>    <dbl>                    <dbl>                  <int>       <dbl>
+1 ejemplo            5         53       72    0.272                     14.4                     18           1
+2 gp                27         94      402    0.158                     14.9                     78           1
+3 completa         391        112     6831    0.156                     17.5                    108           1
+  [OK] Vinculos de la red completa = celdas de B iguales a 1: obtenido 6831 | esperado 6831
+  [OK] Categorias por posicion igual a n_categorias de 02: obtenido 0 | esperado 0
+
+==============================================================================
+Redes bimodales ocupacion - categoria de habilidades
+==============================================================================
+  [OK] art_fig_bimodal_ejemplo
+  [OK] art_fig_bimodal_gp
+  [OK] art_fig_bimodal_completa
+  [OK] art_fig_bimodal_matriz
+[WARNING] Removed 100 rows containing missing values or values outside the scale range (`geom_point()`). 
+[WARNING] Removed 88 rows containing missing values or values outside the scale range (`geom_point()`). 
+[WARNING] Removed 99 rows containing missing values or values outside the scale range (`geom_point()`). 
+[WARNING] Removed 99 rows containing missing values or values outside the scale range (`geom_point()`). 
+[WARNING] Removed 93 rows containing missing values or values outside the scale range (`geom_point()`). 
+[WARNING] Removed 101 rows containing missing values or values outside the scale range (`geom_point()`). 
+[WARNING] Removed 100 rows containing missing values or values outside the scale range (`geom_point()`). 
+[WARNING] Removed 88 rows containing missing values or values outside the scale range (`geom_point()`). 
+[WARNING] Removed 99 rows containing missing values or values outside the scale range (`geom_point()`). 
+[WARNING] Removed 99 rows containing missing values or values outside the scale range (`geom_point()`). 
+[WARNING] Removed 93 rows containing missing values or values outside the scale range (`geom_point()`). 
+[WARNING] Removed 101 rows containing missing values or values outside the scale range (`geom_point()`). 
+  [OK] art_fig_bimodal_ejemplos
+  [OK] art_fig_bimodal_27_filas
+Figuras guardadas en /Users/trajanpirkovic/Library/CloudStorage/OneDrive-UniversidadCatólicadeChile/Tesis/scripts/output_final/figuras 
+
+[08_grafo_bimodal.R] OK en 8.2 s
+
+ PIPELINE COMPLETO 
+
+Versiones de los paquetes:
+  tidyverse  2.0.0
+  dplyr      1.2.1
+  readxl     1.5.0
+  haven      2.5.5
+  survey     4.5
+  igraph     2.3.3
+  ggraph     2.2.2
+  tidygraph  1.3.1
+  ggrepel    0.9.8
+  ragg       1.5.2
+  DIGCLASS   0.0.3
+  glmmTMB    1.1.14
+R version 4.6.1 (2026-06-24)
+Platform: aarch64-apple-darwin23
+Running under: macOS Tahoe 26.6.2
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+time zone: America/Santiago
+tzcode source: internal
+
+attached base packages:
+[1] grid      stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] DIGCLASS_0.0.3  tidygraph_1.3.1 ggraph_2.2.2    igraph_2.3.3    survey_4.5      survival_3.8-6  Matrix_1.7-5    haven_2.5.5     readxl_1.5.0    lubridate_1.9.5 forcats_1.0.1  
+[12] stringr_1.6.0   dplyr_1.2.1     purrr_1.2.2     readr_2.2.0     tidyr_1.3.2     tibble_3.3.1    ggplot2_4.0.3   tidyverse_2.0.0
+
+loaded via a namespace (and not attached):
+ [1] tidyselect_1.2.1    viridisLite_0.4.3   glmmTMB_1.1.14      farver_2.1.2        viridis_0.6.5       S7_0.2.2            fastmap_1.2.0       tweenr_2.0.3       
+ [9] estimability_2.0.0  timechange_0.4.0    lifecycle_1.0.5     magrittr_2.0.5      compiler_4.6.1      rlang_1.3.0         tools_4.6.1         utf8_1.2.6         
+[17] labeling_0.4.3      graphlayouts_1.2.5  bit_4.6.0           RColorBrewer_1.1-3  numDeriv_2016.8-1.1 withr_3.0.3         polyclip_1.10-7     xtable_1.8-8       
+[25] emmeans_2.0.3       scales_1.4.0        MASS_7.3-65         mvtnorm_1.4-1       cli_3.6.6           crayon_1.5.3        ragg_1.5.2          reformulas_0.4.4   
+[33] generics_0.1.4      otel_0.2.0          tzdb_0.5.0          minqa_1.2.8         DBI_1.3.0           cachem_1.1.0        ggforce_0.5.0       splines_4.6.1      
+[41] parallel_4.6.1      cellranger_1.1.0    mitools_2.4         vctrs_0.7.3         sandwich_3.1-1      boot_1.3-32         patchwork_1.3.2     hms_1.1.4          
+[49] bit64_4.8.2         ggrepel_0.9.8       systemfonts_1.3.2   glue_1.8.1          nloptr_2.2.1        stringi_1.8.7       gtable_0.3.6        lme4_2.0-1         
+[57] pillar_1.11.1       R6_2.6.1            TMB_1.9.21          textshaping_1.0.5   Rdpack_2.6.6        vroom_1.7.1         lattice_0.22-9      rbibutils_2.4.1    
+[65] memoise_2.0.1       Rcpp_1.1.1-1.1      coda_0.19-4.1       gridExtra_2.3.1     nlme_3.1-169        mgcv_1.9-4          zoo_1.8-15          pkgconfig_2.0.3    

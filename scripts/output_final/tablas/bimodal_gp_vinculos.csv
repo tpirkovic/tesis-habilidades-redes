@@ -1,0 +1,403 @@
+posicion,ocupacion,L2_code,categoria,comunidad
+Q0101,Gerentes/directores de grandes empresas,S2.7,Analizar y evaluar información y datos,Analítico-simbólico
+Q0101,Gerentes/directores de grandes empresas,S4.6,Crear y desarrollar equipos,Analítico-simbólico
+Q0101,Gerentes/directores de grandes empresas,S4.1,Desarrollar objetivos y estrategias,Analítico-simbólico
+Q0101,Gerentes/directores de grandes empresas,041,Educación comercial y administración,Analítico-simbólico
+Q0101,Gerentes/directores de grandes empresas,S1.4,Presentar información,Analítico-simbólico
+Q0101,Gerentes/directores de grandes empresas,S1.15,Utilizar más de una lengua,Analítico-simbólico
+Q0101,Gerentes/directores de grandes empresas,042,Derecho,Bio-ambiental-legal
+Q0101,Gerentes/directores de grandes empresas,S1.2,Actuar como enlace y crear redes de c...,Gestión y cuidado
+Q0101,Gerentes/directores de grandes empresas,S4.3,Asignar y controlar recursos,Gestión y cuidado
+Q0101,Gerentes/directores de grandes empresas,031,Ciencias sociales y del comportamiento,Gestión y cuidado
+Q0101,Gerentes/directores de grandes empresas,S4.0,Competencias de gestión,Gestión y cuidado
+Q0101,Gerentes/directores de grandes empresas,S4.5,Guiar y motivar,Gestión y cuidado
+Q0101,Gerentes/directores de grandes empresas,S1.1,Negociar,Gestión y cuidado
+Q0101,Gerentes/directores de grandes empresas,S1.6,"Promocionar, vender y comprar",Gestión y cuidado
+Q0101,Gerentes/directores de grandes empresas,S4.8,Supervisar a personas,Gestión y cuidado
+Q0101,Gerentes/directores de grandes empresas,S4.9,Tomar decisiones,Gestión y cuidado
+Q0101,Gerentes/directores de grandes empresas,S2.8,"Realizar seguimiento, inspección y en...",Técnico-material
+Q0102,Profesores de educación media o básica,003,Competencias personales y desarrollo,Analítico-simbólico
+Q0102,Profesores de educación media o básica,S1.12,"Crear materiales artísticos, visuales...",Analítico-simbólico
+Q0102,Profesores de educación media o básica,S4.6,Crear y desarrollar equipos,Analítico-simbólico
+Q0102,Profesores de educación media o básica,S1.2,Actuar como enlace y crear redes de c...,Gestión y cuidado
+Q0102,Profesores de educación media o básica,031,Ciencias sociales y del comportamiento,Gestión y cuidado
+Q0102,Profesores de educación media o básica,011,Educación,Gestión y cuidado
+Q0102,Profesores de educación media o básica,S1.3,Enseñar y formar,Gestión y cuidado
+Q0102,Profesores de educación media o básica,S3.4,Facilitar información y apoyo al públ...,Gestión y cuidado
+Q0102,Profesores de educación media o básica,S4.5,Guiar y motivar,Gestión y cuidado
+Q0102,Profesores de educación media o básica,S1.5,Prestar asesoramiento y consultoría,Gestión y cuidado
+Q0102,Profesores de educación media o básica,S3.6,Prestar cuidados personales en general,Gestión y cuidado
+Q0102,Profesores de educación media o básica,S4.8,Supervisar a personas,Gestión y cuidado
+Q0102,Profesores de educación media o básica,S1.8,Trabajar con otros,Gestión y cuidado
+Q0103,Mecánicos de autos,003,Competencias personales y desarrollo,Analítico-simbólico
+Q0103,Mecánicos de autos,T2.1,"Procesar información, ideas y conceptos",Analítico-simbólico
+Q0103,Mecánicos de autos,S4.0,Competencias de gestión,Gestión y cuidado
+Q0103,Mecánicos de autos,S2.2,Documentar y registrar información,Gestión y cuidado
+Q0103,Mecánicos de autos,S3.4,Facilitar información y apoyo al públ...,Gestión y cuidado
+Q0103,Mecánicos de autos,S1.1,Negociar,Gestión y cuidado
+Q0103,Mecánicos de autos,S1.6,"Promocionar, vender y comprar",Gestión y cuidado
+Q0103,Mecánicos de autos,S8.2,Conducir vehículos,Técnico-material
+Q0103,Mecánicos de autos,S7.1,Construir y repara estructuras,Técnico-material
+Q0103,Mecánicos de autos,S6.5,Ensamblar y fabricar productos,Técnico-material
+Q0103,Mecánicos de autos,071,Ingeniería y profesiones afines,Técnico-material
+Q0103,Mecánicos de autos,S8.8,"Instalar, mantener y reparar equipos ...",Técnico-material
+Q0103,Mecánicos de autos,S8.7,"Instalar, mantener y reparar equipos ...",Técnico-material
+Q0103,Mecánicos de autos,S6.12,Lavar y mantener textiles y prendas d...,Técnico-material
+Q0103,Mecánicos de autos,S6.11,Limpiar,Técnico-material
+Q0103,Mecánicos de autos,S6.13,Manipular y eliminar residuos y mater...,Técnico-material
+Q0103,Mecánicos de autos,S6.0,Manipular y mover,Técnico-material
+Q0103,Mecánicos de autos,S2.5,Medir propiedades físicas,Técnico-material
+Q0103,Mecánicos de autos,S6.2,Mover y elevar,Técnico-material
+Q0103,Mecánicos de autos,S2.8,"Realizar seguimiento, inspección y en...",Técnico-material
+Q0103,Mecánicos de autos,102,Servicios de higiene y salud ocupacional,Técnico-material
+Q0103,Mecánicos de autos,104,Servicios de transporte,Técnico-material
+Q0103,Mecánicos de autos,S8.0,Trabajar con maquinaria y equipo espe...,Técnico-material
+Q0103,Mecánicos de autos,S6.7,Utilizar herramientas manuales,Técnico-material
+Q0104,Vendedores de tiendas o almacenes,S2.6,Calcular y estimar,Analítico-simbólico
+Q0104,Vendedores de tiendas o almacenes,S1.12,"Crear materiales artísticos, visuales...",Analítico-simbólico
+Q0104,Vendedores de tiendas o almacenes,041,Educación comercial y administración,Analítico-simbólico
+Q0104,Vendedores de tiendas o almacenes,S4.3,Asignar y controlar recursos,Gestión y cuidado
+Q0104,Vendedores de tiendas o almacenes,S1.3,Enseñar y formar,Gestión y cuidado
+Q0104,Vendedores de tiendas o almacenes,S3.4,Facilitar información y apoyo al públ...,Gestión y cuidado
+Q0104,Vendedores de tiendas o almacenes,S1.7,Obtener información verbal,Gestión y cuidado
+Q0104,Vendedores de tiendas o almacenes,S1.5,Prestar asesoramiento y consultoría,Gestión y cuidado
+Q0104,Vendedores de tiendas o almacenes,S1.6,"Promocionar, vender y comprar",Gestión y cuidado
+Q0104,Vendedores de tiendas o almacenes,S4.4,Realizar tareas administrativas,Gestión y cuidado
+Q0104,Vendedores de tiendas o almacenes,101,Servicios personales,Gestión y cuidado
+Q0104,Vendedores de tiendas o almacenes,S6.5,Ensamblar y fabricar productos,Técnico-material
+Q0104,Vendedores de tiendas o almacenes,072,Industria y producción,Técnico-material
+Q0104,Vendedores de tiendas o almacenes,079,"Ingeniería, industria y construcción ...",Técnico-material
+Q0104,Vendedores de tiendas o almacenes,S6.11,Limpiar,Técnico-material
+Q0104,Vendedores de tiendas o almacenes,S6.2,Mover y elevar,Técnico-material
+Q0104,Vendedores de tiendas o almacenes,104,Servicios de transporte,Técnico-material
+Q0105,Ingenieros civiles/industriales/mecánicos,S2.7,Analizar y evaluar información y datos,Analítico-simbólico
+Q0105,Ingenieros civiles/industriales/mecánicos,S2.6,Calcular y estimar,Analítico-simbólico
+Q0105,Ingenieros civiles/industriales/mecánicos,S1.0,"Comunicación, colaboración y creatividad",Analítico-simbólico
+Q0105,Ingenieros civiles/industriales/mecánicos,S1.11,Diseñar sistemas y productos,Analítico-simbólico
+Q0105,Ingenieros civiles/industriales/mecánicos,S1.13,Escribir y redactar,Analítico-simbólico
+Q0105,Ingenieros civiles/industriales/mecánicos,054,Matemáticas y estadística,Analítico-simbólico
+Q0105,Ingenieros civiles/industriales/mecánicos,T2.1,"Procesar información, ideas y conceptos",Analítico-simbólico
+Q0105,Ingenieros civiles/industriales/mecánicos,S2.1,"Realizar estudios, investigaciones y ...",Analítico-simbólico
+Q0105,Ingenieros civiles/industriales/mecánicos,S2.9,Realizar seguimiento de avances en el...,Analítico-simbólico
+Q0105,Ingenieros civiles/industriales/mecánicos,103,Servicios de seguridad,Analítico-simbólico
+Q0105,Ingenieros civiles/industriales/mecánicos,S5.6,Utilizar herramientas digitales para ...,Analítico-simbólico
+Q0105,Ingenieros civiles/industriales/mecánicos,S1.5,Prestar asesoramiento y consultoría,Gestión y cuidado
+Q0105,Ingenieros civiles/industriales/mecánicos,073,Arquitectura y construcción,Técnico-material
+Q0105,Ingenieros civiles/industriales/mecánicos,053,Ciencias físicas,Técnico-material
+Q0105,Ingenieros civiles/industriales/mecánicos,071,Ingeniería y profesiones afines,Técnico-material
+Q0105,Ingenieros civiles/industriales/mecánicos,S7.2,Instalar infraestructura interior o e...,Técnico-material
+Q0105,Ingenieros civiles/industriales/mecánicos,S2.5,Medir propiedades físicas,Técnico-material
+Q0105,Ingenieros civiles/industriales/mecánicos,S3.3,Proteger y velar por el cumplimiento,Técnico-material
+Q0105,Ingenieros civiles/industriales/mecánicos,S5.7,Utilizar herramientas digitales para ...,Técnico-material
+Q0106,Cajeros de supermercado/comercio,S5.5,Acceder a y analizar datos digitales,Analítico-simbólico
+Q0106,Cajeros de supermercado/comercio,S2.6,Calcular y estimar,Analítico-simbólico
+Q0106,Cajeros de supermercado/comercio,041,Educación comercial y administración,Analítico-simbólico
+Q0106,Cajeros de supermercado/comercio,S2.4,Procesar información,Analítico-simbólico
+Q0106,Cajeros de supermercado/comercio,S2.9,Realizar seguimiento de avances en el...,Analítico-simbólico
+Q0106,Cajeros de supermercado/comercio,S1.2,Actuar como enlace y crear redes de c...,Gestión y cuidado
+Q0106,Cajeros de supermercado/comercio,S4.3,Asignar y controlar recursos,Gestión y cuidado
+Q0106,Cajeros de supermercado/comercio,S2.2,Documentar y registrar información,Gestión y cuidado
+Q0106,Cajeros de supermercado/comercio,S3.4,Facilitar información y apoyo al públ...,Gestión y cuidado
+Q0106,Cajeros de supermercado/comercio,S1.7,Obtener información verbal,Gestión y cuidado
+Q0106,Cajeros de supermercado/comercio,S1.6,"Promocionar, vender y comprar",Gestión y cuidado
+Q0106,Cajeros de supermercado/comercio,S4.4,Realizar tareas administrativas,Gestión y cuidado
+Q0106,Cajeros de supermercado/comercio,S6.5,Ensamblar y fabricar productos,Técnico-material
+Q0106,Cajeros de supermercado/comercio,S6.11,Limpiar,Técnico-material
+Q0106,Cajeros de supermercado/comercio,S6.2,Mover y elevar,Técnico-material
+Q0106,Cajeros de supermercado/comercio,S3.3,Proteger y velar por el cumplimiento,Técnico-material
+Q0107,Altos funcionarios del gobierno,S2.7,Analizar y evaluar información y datos,Analítico-simbólico
+Q0107,Altos funcionarios del gobierno,S2.6,Calcular y estimar,Analítico-simbólico
+Q0107,Altos funcionarios del gobierno,S4.1,Desarrollar objetivos y estrategias,Analítico-simbólico
+Q0107,Altos funcionarios del gobierno,041,Educación comercial y administración,Analítico-simbólico
+Q0107,Altos funcionarios del gobierno,103,Servicios de seguridad,Analítico-simbólico
+Q0107,Altos funcionarios del gobierno,S1.15,Utilizar más de una lengua,Analítico-simbólico
+Q0107,Altos funcionarios del gobierno,S1.2,Actuar como enlace y crear redes de c...,Gestión y cuidado
+Q0107,Altos funcionarios del gobierno,S4.3,Asignar y controlar recursos,Gestión y cuidado
+Q0107,Altos funcionarios del gobierno,031,Ciencias sociales y del comportamiento,Gestión y cuidado
+Q0107,Altos funcionarios del gobierno,S4.0,Competencias de gestión,Gestión y cuidado
+Q0107,Altos funcionarios del gobierno,S1.1,Negociar,Gestión y cuidado
+Q0107,Altos funcionarios del gobierno,S3.1,Ofrecer orientación,Gestión y cuidado
+Q0107,Altos funcionarios del gobierno,S1.5,Prestar asesoramiento y consultoría,Gestión y cuidado
+Q0107,Altos funcionarios del gobierno,S4.4,Realizar tareas administrativas,Gestión y cuidado
+Q0107,Altos funcionarios del gobierno,S4.8,Supervisar a personas,Gestión y cuidado
+Q0107,Altos funcionarios del gobierno,S4.9,Tomar decisiones,Gestión y cuidado
+Q0107,Altos funcionarios del gobierno,S1.8,Trabajar con otros,Gestión y cuidado
+Q0107,Altos funcionarios del gobierno,S2.8,"Realizar seguimiento, inspección y en...",Técnico-material
+Q0107,Altos funcionarios del gobierno,S1.9,Solucionar problemas,Técnico-material
+Q0108,Guardias de seguridad,103,Servicios de seguridad,Analítico-simbólico
+Q0108,Guardias de seguridad,S1.2,Actuar como enlace y crear redes de c...,Gestión y cuidado
+Q0108,Guardias de seguridad,031,Ciencias sociales y del comportamiento,Gestión y cuidado
+Q0108,Guardias de seguridad,S2.2,Documentar y registrar información,Gestión y cuidado
+Q0108,Guardias de seguridad,S3.4,Facilitar información y apoyo al públ...,Gestión y cuidado
+Q0108,Guardias de seguridad,S7.1,Construir y repara estructuras,Técnico-material
+Q0108,Guardias de seguridad,T3.3,Mantener una actitud positiva,Técnico-material
+Q0108,Guardias de seguridad,S6.2,Mover y elevar,Técnico-material
+Q0108,Guardias de seguridad,S3.3,Proteger y velar por el cumplimiento,Técnico-material
+Q0108,Guardias de seguridad,S2.8,"Realizar seguimiento, inspección y en...",Técnico-material
+Q0108,Guardias de seguridad,104,Servicios de transporte,Técnico-material
+Q0108,Guardias de seguridad,S1.9,Solucionar problemas,Técnico-material
+Q0108,Guardias de seguridad,S5.7,Utilizar herramientas digitales para ...,Técnico-material
+Q0109,Profesores universitarios,021,Artes,Analítico-simbólico
+Q0109,Profesores universitarios,S1.0,"Comunicación, colaboración y creatividad",Analítico-simbólico
+Q0109,Profesores universitarios,S1.12,"Crear materiales artísticos, visuales...",Analítico-simbólico
+Q0109,Profesores universitarios,S4.6,Crear y desarrollar equipos,Analítico-simbólico
+Q0109,Profesores universitarios,S4.1,Desarrollar objetivos y estrategias,Analítico-simbólico
+Q0109,Profesores universitarios,S1.13,Escribir y redactar,Analítico-simbólico
+Q0109,Profesores universitarios,022,Humanidades (excepto idiomas),Analítico-simbólico
+Q0109,Profesores universitarios,023,Idiomas,Analítico-simbólico
+Q0109,Profesores universitarios,032,Periodismo e información,Analítico-simbólico
+Q0109,Profesores universitarios,S1.4,Presentar información,Analítico-simbólico
+Q0109,Profesores universitarios,S2.4,Procesar información,Analítico-simbólico
+Q0109,Profesores universitarios,T2.1,"Procesar información, ideas y conceptos",Analítico-simbólico
+Q0109,Profesores universitarios,S2.1,"Realizar estudios, investigaciones y ...",Analítico-simbólico
+Q0109,Profesores universitarios,S2.9,Realizar seguimiento de avances en el...,Analítico-simbólico
+Q0109,Profesores universitarios,051,Ciencias biológicas y afines,Bio-ambiental-legal
+Q0109,Profesores universitarios,084,Veterinaria,Bio-ambiental-legal
+Q0109,Profesores universitarios,S1.2,Actuar como enlace y crear redes de c...,Gestión y cuidado
+Q0109,Profesores universitarios,031,Ciencias sociales y del comportamiento,Gestión y cuidado
+Q0109,Profesores universitarios,011,Educación,Gestión y cuidado
+Q0109,Profesores universitarios,S1.3,Enseñar y formar,Gestión y cuidado
+Q0109,Profesores universitarios,S3.4,Facilitar información y apoyo al públ...,Gestión y cuidado
+Q0109,Profesores universitarios,S4.5,Guiar y motivar,Gestión y cuidado
+Q0109,Profesores universitarios,S3.1,Ofrecer orientación,Gestión y cuidado
+Q0109,Profesores universitarios,091,Salud,Gestión y cuidado
+Q0109,Profesores universitarios,S4.8,Supervisar a personas,Gestión y cuidado
+Q0109,Profesores universitarios,S1.8,Trabajar con otros,Gestión y cuidado
+Q0110,Trabajadores agrícolas (cosecha/cultivo),S6.4,Ocuparse de plantas y cultivos,Bio-ambiental-legal
+Q0110,Trabajadores agrícolas (cosecha/cultivo),S6.1,"Clasificar y envasar, embalar y empaq...",Técnico-material
+Q0110,Trabajadores agrícolas (cosecha/cultivo),S7.1,Construir y repara estructuras,Técnico-material
+Q0110,Trabajadores agrícolas (cosecha/cultivo),S6.2,Mover y elevar,Técnico-material
+Q0110,Trabajadores agrícolas (cosecha/cultivo),S8.1,Operar maquinaria móvil,Técnico-material
+Q0110,Trabajadores agrícolas (cosecha/cultivo),S3.3,Proteger y velar por el cumplimiento,Técnico-material
+Q0111,Comerciantes y dueños de locales/tiendas,S2.7,Analizar y evaluar información y datos,Analítico-simbólico
+Q0111,Comerciantes y dueños de locales/tiendas,S2.6,Calcular y estimar,Analítico-simbólico
+Q0111,Comerciantes y dueños de locales/tiendas,S1.12,"Crear materiales artísticos, visuales...",Analítico-simbólico
+Q0111,Comerciantes y dueños de locales/tiendas,S4.1,Desarrollar objetivos y estrategias,Analítico-simbólico
+Q0111,Comerciantes y dueños de locales/tiendas,042,Derecho,Bio-ambiental-legal
+Q0111,Comerciantes y dueños de locales/tiendas,S3.4,Facilitar información y apoyo al públ...,Gestión y cuidado
+Q0111,Comerciantes y dueños de locales/tiendas,S1.1,Negociar,Gestión y cuidado
+Q0111,Comerciantes y dueños de locales/tiendas,S1.7,Obtener información verbal,Gestión y cuidado
+Q0111,Comerciantes y dueños de locales/tiendas,S4.2,"Organizar, planificar y programar tra...",Gestión y cuidado
+Q0111,Comerciantes y dueños de locales/tiendas,S1.6,"Promocionar, vender y comprar",Gestión y cuidado
+Q0111,Comerciantes y dueños de locales/tiendas,S4.7,Reclutar y contratar,Gestión y cuidado
+Q0111,Comerciantes y dueños de locales/tiendas,S4.8,Supervisar a personas,Gestión y cuidado
+Q0111,Comerciantes y dueños de locales/tiendas,S2.8,"Realizar seguimiento, inspección y en...",Técnico-material
+Q0112,Repartidores de apps (Rappi/Uber/PedidosYa),S1.2,Actuar como enlace y crear redes de c...,Gestión y cuidado
+Q0112,Repartidores de apps (Rappi/Uber/PedidosYa),S3.4,Facilitar información y apoyo al públ...,Gestión y cuidado
+Q0112,Repartidores de apps (Rappi/Uber/PedidosYa),S1.6,"Promocionar, vender y comprar",Gestión y cuidado
+Q0112,Repartidores de apps (Rappi/Uber/PedidosYa),S8.2,Conducir vehículos,Técnico-material
+Q0112,Repartidores de apps (Rappi/Uber/PedidosYa),S6.2,Mover y elevar,Técnico-material
+Q0112,Repartidores de apps (Rappi/Uber/PedidosYa),S3.3,Proteger y velar por el cumplimiento,Técnico-material
+Q0113,Conductores de camiones/pesados,103,Servicios de seguridad,Analítico-simbólico
+Q0113,Conductores de camiones/pesados,S5.6,Utilizar herramientas digitales para ...,Analítico-simbólico
+Q0113,Conductores de camiones/pesados,051,Ciencias biológicas y afines,Bio-ambiental-legal
+Q0113,Conductores de camiones/pesados,042,Derecho,Bio-ambiental-legal
+Q0113,Conductores de camiones/pesados,S6.9,Manipular animales,Bio-ambiental-legal
+Q0113,Conductores de camiones/pesados,084,Veterinaria,Bio-ambiental-legal
+Q0113,Conductores de camiones/pesados,S4.5,Guiar y motivar,Gestión y cuidado
+Q0113,Conductores de camiones/pesados,101,Servicios personales,Gestión y cuidado
+Q0113,Conductores de camiones/pesados,S8.2,Conducir vehículos,Técnico-material
+Q0113,Conductores de camiones/pesados,S7.1,Construir y repara estructuras,Técnico-material
+Q0113,Conductores de camiones/pesados,071,Ingeniería y profesiones afines,Técnico-material
+Q0113,Conductores de camiones/pesados,S6.11,Limpiar,Técnico-material
+Q0113,Conductores de camiones/pesados,S6.13,Manipular y eliminar residuos y mater...,Técnico-material
+Q0113,Conductores de camiones/pesados,S6.2,Mover y elevar,Técnico-material
+Q0113,Conductores de camiones/pesados,S8.1,Operar maquinaria móvil,Técnico-material
+Q0113,Conductores de camiones/pesados,S8.4,Operar maquinaria para la extracción ...,Técnico-material
+Q0113,Conductores de camiones/pesados,S3.3,Proteger y velar por el cumplimiento,Técnico-material
+Q0113,Conductores de camiones/pesados,S2.8,"Realizar seguimiento, inspección y en...",Técnico-material
+Q0113,Conductores de camiones/pesados,102,Servicios de higiene y salud ocupacional,Técnico-material
+Q0113,Conductores de camiones/pesados,104,Servicios de transporte,Técnico-material
+Q0113,Conductores de camiones/pesados,S1.9,Solucionar problemas,Técnico-material
+Q0113,Conductores de camiones/pesados,S8.0,Trabajar con maquinaria y equipo espe...,Técnico-material
+Q0113,Conductores de camiones/pesados,T3.1,Trabajar de manera eficiente,Técnico-material
+Q0113,Conductores de camiones/pesados,S6.7,Utilizar herramientas manuales,Técnico-material
+Q0113,Conductores de camiones/pesados,S8.6,Utilizar instrumentos y equipos de pr...,Técnico-material
+Q0114,Médicos o doctores,S1.0,"Comunicación, colaboración y creatividad",Analítico-simbólico
+Q0114,Médicos o doctores,S4.1,Desarrollar objetivos y estrategias,Analítico-simbólico
+Q0114,Médicos o doctores,S2.3,Gestionar información,Analítico-simbólico
+Q0114,Médicos o doctores,S2.4,Procesar información,Analítico-simbólico
+Q0114,Médicos o doctores,T2.1,"Procesar información, ideas y conceptos",Analítico-simbólico
+Q0114,Médicos o doctores,S5.1,Programar sistemas informáticos,Analítico-simbólico
+Q0114,Médicos o doctores,S2.1,"Realizar estudios, investigaciones y ...",Analítico-simbólico
+Q0114,Médicos o doctores,061,Tecnologías de la información y la co...,Analítico-simbólico
+Q0114,Médicos o doctores,S4.2,"Organizar, planificar y programar tra...",Gestión y cuidado
+Q0114,Médicos o doctores,S3.2,Prestar atención sanitaria o administ...,Gestión y cuidado
+Q0114,Médicos o doctores,091,Salud,Gestión y cuidado
+Q0114,Médicos o doctores,S1.8,Trabajar con otros,Gestión y cuidado
+Q0115,Secretarios/as,S5.5,Acceder a y analizar datos digitales,Analítico-simbólico
+Q0115,Secretarios/as,041,Educación comercial y administración,Analítico-simbólico
+Q0115,Secretarios/as,S1.13,Escribir y redactar,Analítico-simbólico
+Q0115,Secretarios/as,S2.3,Gestionar información,Analítico-simbólico
+Q0115,Secretarios/as,S2.4,Procesar información,Analítico-simbólico
+Q0115,Secretarios/as,S5.6,Utilizar herramientas digitales para ...,Analítico-simbólico
+Q0115,Secretarios/as,S1.2,Actuar como enlace y crear redes de c...,Gestión y cuidado
+Q0115,Secretarios/as,S2.2,Documentar y registrar información,Gestión y cuidado
+Q0115,Secretarios/as,S4.4,Realizar tareas administrativas,Gestión y cuidado
+Q0115,Secretarios/as,S1.8,Trabajar con otros,Gestión y cuidado
+Q0115,Secretarios/as,S2.8,"Realizar seguimiento, inspección y en...",Técnico-material
+Q0116,Enfermeros/asistentes médicos TENS,S5.5,Acceder a y analizar datos digitales,Analítico-simbólico
+Q0116,Enfermeros/asistentes médicos TENS,S5.6,Utilizar herramientas digitales para ...,Analítico-simbólico
+Q0116,Enfermeros/asistentes médicos TENS,S1.2,Actuar como enlace y crear redes de c...,Gestión y cuidado
+Q0116,Enfermeros/asistentes médicos TENS,092,Bienestar,Gestión y cuidado
+Q0116,Enfermeros/asistentes médicos TENS,S1.3,Enseñar y formar,Gestión y cuidado
+Q0116,Enfermeros/asistentes médicos TENS,S1.7,Obtener información verbal,Gestión y cuidado
+Q0116,Enfermeros/asistentes médicos TENS,S4.2,"Organizar, planificar y programar tra...",Gestión y cuidado
+Q0116,Enfermeros/asistentes médicos TENS,S1.5,Prestar asesoramiento y consultoría,Gestión y cuidado
+Q0116,Enfermeros/asistentes médicos TENS,S3.0,Prestar asistencia y cuidados,Gestión y cuidado
+Q0116,Enfermeros/asistentes médicos TENS,S3.2,Prestar atención sanitaria o administ...,Gestión y cuidado
+Q0116,Enfermeros/asistentes médicos TENS,S3.6,Prestar cuidados personales en general,Gestión y cuidado
+Q0116,Enfermeros/asistentes médicos TENS,091,Salud,Gestión y cuidado
+Q0116,Enfermeros/asistentes médicos TENS,S1.8,Trabajar con otros,Gestión y cuidado
+Q0116,Enfermeros/asistentes médicos TENS,S3.3,Proteger y velar por el cumplimiento,Técnico-material
+Q0116,Enfermeros/asistentes médicos TENS,S2.8,"Realizar seguimiento, inspección y en...",Técnico-material
+Q0116,Enfermeros/asistentes médicos TENS,102,Servicios de higiene y salud ocupacional,Técnico-material
+Q0116,Enfermeros/asistentes médicos TENS,S1.9,Solucionar problemas,Técnico-material
+Q0117,Cocineros/as,S2.9,Realizar seguimiento de avances en el...,Analítico-simbólico
+Q0117,Cocineros/as,S4.3,Asignar y controlar recursos,Gestión y cuidado
+Q0117,Cocineros/as,S4.0,Competencias de gestión,Gestión y cuidado
+Q0117,Cocineros/as,S2.2,Documentar y registrar información,Gestión y cuidado
+Q0117,Cocineros/as,S3.5,Preparar y servir alimentos y bebidas,Gestión y cuidado
+Q0117,Cocineros/as,S1.6,"Promocionar, vender y comprar",Gestión y cuidado
+Q0117,Cocineros/as,091,Salud,Gestión y cuidado
+Q0117,Cocineros/as,S1.8,Trabajar con otros,Gestión y cuidado
+Q0117,Cocineros/as,S6.1,"Clasificar y envasar, embalar y empaq...",Técnico-material
+Q0117,Cocineros/as,S6.5,Ensamblar y fabricar productos,Técnico-material
+Q0117,Cocineros/as,072,Industria y producción,Técnico-material
+Q0117,Cocineros/as,S6.11,Limpiar,Técnico-material
+Q0117,Cocineros/as,S6.2,Mover y elevar,Técnico-material
+Q0117,Cocineros/as,S8.5,Operar maquinaria para la fabricación...,Técnico-material
+Q0117,Cocineros/as,S3.3,Proteger y velar por el cumplimiento,Técnico-material
+Q0117,Cocineros/as,S2.8,"Realizar seguimiento, inspección y en...",Técnico-material
+Q0117,Cocineros/as,S6.3,Transformar y mezclar materiales,Técnico-material
+Q0117,Cocineros/as,S6.7,Utilizar herramientas manuales,Técnico-material
+Q0118,Vendedores ambulantes,S1.12,"Crear materiales artísticos, visuales...",Analítico-simbólico
+Q0118,Vendedores ambulantes,041,Educación comercial y administración,Analítico-simbólico
+Q0118,Vendedores ambulantes,103,Servicios de seguridad,Analítico-simbólico
+Q0118,Vendedores ambulantes,S1.2,Actuar como enlace y crear redes de c...,Gestión y cuidado
+Q0118,Vendedores ambulantes,S1.3,Enseñar y formar,Gestión y cuidado
+Q0118,Vendedores ambulantes,S3.4,Facilitar información y apoyo al públ...,Gestión y cuidado
+Q0118,Vendedores ambulantes,S1.1,Negociar,Gestión y cuidado
+Q0118,Vendedores ambulantes,S3.5,Preparar y servir alimentos y bebidas,Gestión y cuidado
+Q0118,Vendedores ambulantes,S1.6,"Promocionar, vender y comprar",Gestión y cuidado
+Q0118,Vendedores ambulantes,S4.4,Realizar tareas administrativas,Gestión y cuidado
+Q0118,Vendedores ambulantes,S6.11,Limpiar,Técnico-material
+Q0118,Vendedores ambulantes,S6.0,Manipular y mover,Técnico-material
+Q0118,Vendedores ambulantes,S6.2,Mover y elevar,Técnico-material
+Q0118,Vendedores ambulantes,S1.9,Solucionar problemas,Técnico-material
+Q0119,Electricistas,S2.1,"Realizar estudios, investigaciones y ...",Analítico-simbólico
+Q0119,Electricistas,S4.0,Competencias de gestión,Gestión y cuidado
+Q0119,Electricistas,S7.1,Construir y repara estructuras,Técnico-material
+Q0119,Electricistas,071,Ingeniería y profesiones afines,Técnico-material
+Q0119,Electricistas,S7.2,Instalar infraestructura interior o e...,Técnico-material
+Q0119,Electricistas,S8.8,"Instalar, mantener y reparar equipos ...",Técnico-material
+Q0119,Electricistas,S2.5,Medir propiedades físicas,Técnico-material
+Q0119,Electricistas,S6.2,Mover y elevar,Técnico-material
+Q0119,Electricistas,S3.3,Proteger y velar por el cumplimiento,Técnico-material
+Q0119,Electricistas,S1.9,Solucionar problemas,Técnico-material
+Q0119,Electricistas,S6.7,Utilizar herramientas manuales,Técnico-material
+Q0119,Electricistas,S8.6,Utilizar instrumentos y equipos de pr...,Técnico-material
+Q0120,Abogados,S2.7,Analizar y evaluar información y datos,Analítico-simbólico
+Q0120,Abogados,S1.4,Presentar información,Analítico-simbólico
+Q0120,Abogados,042,Derecho,Bio-ambiental-legal
+Q0120,Abogados,S1.2,Actuar como enlace y crear redes de c...,Gestión y cuidado
+Q0120,Abogados,031,Ciencias sociales y del comportamiento,Gestión y cuidado
+Q0120,Abogados,S2.2,Documentar y registrar información,Gestión y cuidado
+Q0120,Abogados,S3.4,Facilitar información y apoyo al públ...,Gestión y cuidado
+Q0120,Abogados,S1.1,Negociar,Gestión y cuidado
+Q0120,Abogados,S1.7,Obtener información verbal,Gestión y cuidado
+Q0120,Abogados,S1.5,Prestar asesoramiento y consultoría,Gestión y cuidado
+Q0120,Abogados,S3.3,Proteger y velar por el cumplimiento,Técnico-material
+Q0121,Obreros de construcción o fábricas,S1.8,Trabajar con otros,Gestión y cuidado
+Q0121,Obreros de construcción o fábricas,S7.1,Construir y repara estructuras,Técnico-material
+Q0121,Obreros de construcción o fábricas,S6.2,Mover y elevar,Técnico-material
+Q0121,Obreros de construcción o fábricas,S8.1,Operar maquinaria móvil,Técnico-material
+Q0121,Obreros de construcción o fábricas,S3.3,Proteger y velar por el cumplimiento,Técnico-material
+Q0121,Obreros de construcción o fábricas,S2.8,"Realizar seguimiento, inspección y en...",Técnico-material
+Q0121,Obreros de construcción o fábricas,S7.3,Rematar estructuras interiores o exte...,Técnico-material
+Q0121,Obreros de construcción o fábricas,S6.3,Transformar y mezclar materiales,Técnico-material
+Q0121,Obreros de construcción o fábricas,S6.7,Utilizar herramientas manuales,Técnico-material
+Q0122,Aseadores de oficina/auxiliares de aseo,S2.2,Documentar y registrar información,Gestión y cuidado
+Q0122,Aseadores de oficina/auxiliares de aseo,S1.1,Negociar,Gestión y cuidado
+Q0122,Aseadores de oficina/auxiliares de aseo,S1.6,"Promocionar, vender y comprar",Gestión y cuidado
+Q0122,Aseadores de oficina/auxiliares de aseo,101,Servicios personales,Gestión y cuidado
+Q0122,Aseadores de oficina/auxiliares de aseo,S1.8,Trabajar con otros,Gestión y cuidado
+Q0122,Aseadores de oficina/auxiliares de aseo,S6.1,"Clasificar y envasar, embalar y empaq...",Técnico-material
+Q0122,Aseadores de oficina/auxiliares de aseo,072,Industria y producción,Técnico-material
+Q0122,Aseadores de oficina/auxiliares de aseo,S8.8,"Instalar, mantener y reparar equipos ...",Técnico-material
+Q0122,Aseadores de oficina/auxiliares de aseo,S6.11,Limpiar,Técnico-material
+Q0122,Aseadores de oficina/auxiliares de aseo,S6.13,Manipular y eliminar residuos y mater...,Técnico-material
+Q0122,Aseadores de oficina/auxiliares de aseo,S6.0,Manipular y mover,Técnico-material
+Q0122,Aseadores de oficina/auxiliares de aseo,S6.2,Mover y elevar,Técnico-material
+Q0122,Aseadores de oficina/auxiliares de aseo,S3.3,Proteger y velar por el cumplimiento,Técnico-material
+Q0122,Aseadores de oficina/auxiliares de aseo,S7.3,Rematar estructuras interiores o exte...,Técnico-material
+Q0122,Aseadores de oficina/auxiliares de aseo,102,Servicios de higiene y salud ocupacional,Técnico-material
+Q0122,Aseadores de oficina/auxiliares de aseo,104,Servicios de transporte,Técnico-material
+Q0122,Aseadores de oficina/auxiliares de aseo,S6.7,Utilizar herramientas manuales,Técnico-material
+Q0123,Arquitectos/as,021,Artes,Analítico-simbólico
+Q0123,Arquitectos/as,S2.6,Calcular y estimar,Analítico-simbólico
+Q0123,Arquitectos/as,S1.12,"Crear materiales artísticos, visuales...",Analítico-simbólico
+Q0123,Arquitectos/as,S1.11,Diseñar sistemas y productos,Analítico-simbólico
+Q0123,Arquitectos/as,S1.13,Escribir y redactar,Analítico-simbólico
+Q0123,Arquitectos/as,S2.1,"Realizar estudios, investigaciones y ...",Analítico-simbólico
+Q0123,Arquitectos/as,S2.9,Realizar seguimiento de avances en el...,Analítico-simbólico
+Q0123,Arquitectos/as,S5.6,Utilizar herramientas digitales para ...,Analítico-simbólico
+Q0123,Arquitectos/as,042,Derecho,Bio-ambiental-legal
+Q0123,Arquitectos/as,S6.4,Ocuparse de plantas y cultivos,Bio-ambiental-legal
+Q0123,Arquitectos/as,S1.1,Negociar,Gestión y cuidado
+Q0123,Arquitectos/as,S1.7,Obtener información verbal,Gestión y cuidado
+Q0123,Arquitectos/as,S1.5,Prestar asesoramiento y consultoría,Gestión y cuidado
+Q0123,Arquitectos/as,073,Arquitectura y construcción,Técnico-material
+Q0123,Arquitectos/as,072,Industria y producción,Técnico-material
+Q0123,Arquitectos/as,S2.5,Medir propiedades físicas,Técnico-material
+Q0124,Parvularios/as,003,Competencias personales y desarrollo,Analítico-simbólico
+Q0124,Parvularios/as,S1.12,"Crear materiales artísticos, visuales...",Analítico-simbólico
+Q0124,Parvularios/as,S4.6,Crear y desarrollar equipos,Analítico-simbólico
+Q0124,Parvularios/as,022,Humanidades (excepto idiomas),Analítico-simbólico
+Q0124,Parvularios/as,S2.1,"Realizar estudios, investigaciones y ...",Analítico-simbólico
+Q0124,Parvularios/as,011,Educación,Gestión y cuidado
+Q0124,Parvularios/as,S1.3,Enseñar y formar,Gestión y cuidado
+Q0124,Parvularios/as,S3.4,Facilitar información y apoyo al públ...,Gestión y cuidado
+Q0124,Parvularios/as,S4.5,Guiar y motivar,Gestión y cuidado
+Q0124,Parvularios/as,S1.5,Prestar asesoramiento y consultoría,Gestión y cuidado
+Q0124,Parvularios/as,S3.6,Prestar cuidados personales en general,Gestión y cuidado
+Q0124,Parvularios/as,S4.8,Supervisar a personas,Gestión y cuidado
+Q0124,Parvularios/as,S1.8,Trabajar con otros,Gestión y cuidado
+Q0125,Carabineros y policías,S1.4,Presentar información,Analítico-simbólico
+Q0125,Carabineros y policías,103,Servicios de seguridad,Analítico-simbólico
+Q0125,Carabineros y policías,042,Derecho,Bio-ambiental-legal
+Q0125,Carabineros y policías,S1.2,Actuar como enlace y crear redes de c...,Gestión y cuidado
+Q0125,Carabineros y policías,S3.2,Prestar atención sanitaria o administ...,Gestión y cuidado
+Q0125,Carabineros y policías,091,Salud,Gestión y cuidado
+Q0125,Carabineros y policías,S3.3,Proteger y velar por el cumplimiento,Técnico-material
+Q0126,Trabajadores sociales,S5.5,Acceder a y analizar datos digitales,Analítico-simbólico
+Q0126,Trabajadores sociales,S1.13,Escribir y redactar,Analítico-simbólico
+Q0126,Trabajadores sociales,S2.9,Realizar seguimiento de avances en el...,Analítico-simbólico
+Q0126,Trabajadores sociales,042,Derecho,Bio-ambiental-legal
+Q0126,Trabajadores sociales,S1.2,Actuar como enlace y crear redes de c...,Gestión y cuidado
+Q0126,Trabajadores sociales,092,Bienestar,Gestión y cuidado
+Q0126,Trabajadores sociales,031,Ciencias sociales y del comportamiento,Gestión y cuidado
+Q0126,Trabajadores sociales,S4.0,Competencias de gestión,Gestión y cuidado
+Q0126,Trabajadores sociales,S3.4,Facilitar información y apoyo al públ...,Gestión y cuidado
+Q0126,Trabajadores sociales,S4.5,Guiar y motivar,Gestión y cuidado
+Q0126,Trabajadores sociales,S1.1,Negociar,Gestión y cuidado
+Q0126,Trabajadores sociales,S1.7,Obtener información verbal,Gestión y cuidado
+Q0126,Trabajadores sociales,S3.1,Ofrecer orientación,Gestión y cuidado
+Q0126,Trabajadores sociales,S4.2,"Organizar, planificar y programar tra...",Gestión y cuidado
+Q0126,Trabajadores sociales,S1.5,Prestar asesoramiento y consultoría,Gestión y cuidado
+Q0126,Trabajadores sociales,S3.0,Prestar asistencia y cuidados,Gestión y cuidado
+Q0126,Trabajadores sociales,S3.6,Prestar cuidados personales en general,Gestión y cuidado
+Q0126,Trabajadores sociales,038,Programas y certificaciones interdisc...,Gestión y cuidado
+Q0126,Trabajadores sociales,S4.8,Supervisar a personas,Gestión y cuidado
+Q0126,Trabajadores sociales,S4.9,Tomar decisiones,Gestión y cuidado
+Q0126,Trabajadores sociales,S1.8,Trabajar con otros,Gestión y cuidado
+Q0126,Trabajadores sociales,S3.3,Proteger y velar por el cumplimiento,Técnico-material
+Q0126,Trabajadores sociales,S1.9,Solucionar problemas,Técnico-material
+Q0127,Contadores/as,S2.7,Analizar y evaluar información y datos,Analítico-simbólico
+Q0127,Contadores/as,041,Educación comercial y administración,Analítico-simbólico
+Q0127,Contadores/as,S1.13,Escribir y redactar,Analítico-simbólico
+Q0127,Contadores/as,042,Derecho,Bio-ambiental-legal
+Q0127,Contadores/as,S4.3,Asignar y controlar recursos,Gestión y cuidado
+Q0127,Contadores/as,S2.2,Documentar y registrar información,Gestión y cuidado
+Q0127,Contadores/as,S1.5,Prestar asesoramiento y consultoría,Gestión y cuidado
+Q0127,Contadores/as,S4.4,Realizar tareas administrativas,Gestión y cuidado

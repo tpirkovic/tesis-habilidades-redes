@@ -40,3 +40,6 @@ Thumbs.db
 
 # Datos fuera del repo
 data/
+
+# Bases a nivel de encuestado del pipeline final (no se versionan)
+scripts/output_final/intermedios/

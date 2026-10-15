@@ -1,0 +1,57 @@
+class_oesch7,lugar,com,share,comunidad,clase
+1. Higher-grade service class,Ocupacion del trabajador,1,0.33144157745025776,Gestión y cuidado,Higher-grade
+1. Higher-grade service class,Ocupacion del trabajador,2,0.167636401889623,Técnico-material,Higher-grade
+1. Higher-grade service class,Ocupacion del trabajador,3,0.4597456780922357,Analítico-simbólico,Higher-grade
+1. Higher-grade service class,Ocupacion del trabajador,4,0.041176342567883543,Bio-ambiental-legal,Higher-grade
+1. Higher-grade service class,Ocupaciones de sus conocidos,1,0.38880771846584855,Gestión y cuidado,Higher-grade
+1. Higher-grade service class,Ocupaciones de sus conocidos,2,0.26507297510617245,Técnico-material,Higher-grade
+1. Higher-grade service class,Ocupaciones de sus conocidos,3,0.3021636854138833,Analítico-simbólico,Higher-grade
+1. Higher-grade service class,Ocupaciones de sus conocidos,4,0.04395562101409582,Bio-ambiental-legal,Higher-grade
+2. Lower-grade service class,Ocupacion del trabajador,1,0.2889021110571609,Gestión y cuidado,Lower-grade*
+2. Lower-grade service class,Ocupacion del trabajador,2,0.21073721483416097,Técnico-material,Lower-grade*
+2. Lower-grade service class,Ocupacion del trabajador,3,0.4360948707499176,Analítico-simbólico,Lower-grade*
+2. Lower-grade service class,Ocupacion del trabajador,4,0.06426580335876023,Bio-ambiental-legal,Lower-grade*
+2. Lower-grade service class,Ocupaciones de sus conocidos,1,0.38575407969444586,Gestión y cuidado,Lower-grade*
+2. Lower-grade service class,Ocupaciones de sus conocidos,2,0.34272380719485185,Técnico-material,Lower-grade*
+2. Lower-grade service class,Ocupaciones de sus conocidos,3,0.23738575657173752,Analítico-simbólico,Lower-grade*
+2. Lower-grade service class,Ocupaciones de sus conocidos,4,0.03413635653896466,Bio-ambiental-legal,Lower-grade*
+3. Socio-cultural (semi) professionals,Ocupacion del trabajador,1,0.6094188549110082,Gestión y cuidado,Socio-cultural
+3. Socio-cultural (semi) professionals,Ocupacion del trabajador,2,0.09646788712872521,Técnico-material,Socio-cultural
+3. Socio-cultural (semi) professionals,Ocupacion del trabajador,3,0.2677967870673635,Analítico-simbólico,Socio-cultural
+3. Socio-cultural (semi) professionals,Ocupacion del trabajador,4,0.026316470892903357,Bio-ambiental-legal,Socio-cultural
+3. Socio-cultural (semi) professionals,Ocupaciones de sus conocidos,1,0.43684352012280475,Gestión y cuidado,Socio-cultural
+3. Socio-cultural (semi) professionals,Ocupaciones de sus conocidos,2,0.2604147346606302,Técnico-material,Socio-cultural
+3. Socio-cultural (semi) professionals,Ocupaciones de sus conocidos,3,0.2727091181482522,Analítico-simbólico,Socio-cultural
+3. Socio-cultural (semi) professionals,Ocupaciones de sus conocidos,4,0.030032627068312966,Bio-ambiental-legal,Socio-cultural
+4. Clerks,Ocupacion del trabajador,1,0.44460470913863753,Gestión y cuidado,Clerks
+4. Clerks,Ocupacion del trabajador,2,0.20654012083731496,Técnico-material,Clerks
+4. Clerks,Ocupacion del trabajador,3,0.3333037482073543,Analítico-simbólico,Clerks
+4. Clerks,Ocupacion del trabajador,4,0.015551421816692893,Bio-ambiental-legal,Clerks
+4. Clerks,Ocupaciones de sus conocidos,1,0.3744860960158681,Gestión y cuidado,Clerks
+4. Clerks,Ocupaciones de sus conocidos,2,0.38751833566925026,Técnico-material,Clerks
+4. Clerks,Ocupaciones de sus conocidos,3,0.20927891614610053,Analítico-simbólico,Clerks
+4. Clerks,Ocupaciones de sus conocidos,4,0.028716652168780495,Bio-ambiental-legal,Clerks
+5. Small business owners,Ocupacion del trabajador,1,0.33825247242684603,Gestión y cuidado,Small business*
+5. Small business owners,Ocupacion del trabajador,2,0.40702631874545353,Técnico-material,Small business*
+5. Small business owners,Ocupacion del trabajador,3,0.2227963908322105,Analítico-simbólico,Small business*
+5. Small business owners,Ocupacion del trabajador,4,0.03192481799548933,Bio-ambiental-legal,Small business*
+5. Small business owners,Ocupaciones de sus conocidos,1,0.3593779270961916,Gestión y cuidado,Small business*
+5. Small business owners,Ocupaciones de sus conocidos,2,0.41470980681396974,Técnico-material,Small business*
+5. Small business owners,Ocupaciones de sus conocidos,3,0.1936790577817852,Analítico-simbólico,Small business*
+5. Small business owners,Ocupaciones de sus conocidos,4,0.03223320830805315,Bio-ambiental-legal,Small business*
+6. Skilled workers,Ocupacion del trabajador,1,0.3358448482499047,Gestión y cuidado,Skilled workers
+6. Skilled workers,Ocupacion del trabajador,2,0.49298981443819373,Técnico-material,Skilled workers
+6. Skilled workers,Ocupacion del trabajador,3,0.15218696250446395,Analítico-simbólico,Skilled workers
+6. Skilled workers,Ocupacion del trabajador,4,0.018978374807436495,Bio-ambiental-legal,Skilled workers
+6. Skilled workers,Ocupaciones de sus conocidos,1,0.352722991318627,Gestión y cuidado,Skilled workers
+6. Skilled workers,Ocupaciones de sus conocidos,2,0.4436403518501331,Técnico-material,Skilled workers
+6. Skilled workers,Ocupaciones de sus conocidos,3,0.17533180155303138,Analítico-simbólico,Skilled workers
+6. Skilled workers,Ocupaciones de sus conocidos,4,0.028304855278207766,Bio-ambiental-legal,Skilled workers
+7. Unskilled workers,Ocupacion del trabajador,1,0.2970958439085547,Gestión y cuidado,Unskilled workers
+7. Unskilled workers,Ocupacion del trabajador,2,0.6237716017755484,Técnico-material,Unskilled workers
+7. Unskilled workers,Ocupacion del trabajador,3,0.07185668714963173,Analítico-simbólico,Unskilled workers
+7. Unskilled workers,Ocupacion del trabajador,4,0.00727586716626508,Bio-ambiental-legal,Unskilled workers
+7. Unskilled workers,Ocupaciones de sus conocidos,1,0.33391443711766255,Gestión y cuidado,Unskilled workers
+7. Unskilled workers,Ocupaciones de sus conocidos,2,0.4983643873455016,Técnico-material,Unskilled workers
+7. Unskilled workers,Ocupaciones de sus conocidos,3,0.14293726520956837,Analítico-simbólico,Unskilled workers
+7. Unskilled workers,Ocupaciones de sus conocidos,4,0.024783910327266095,Bio-ambiental-legal,Unskilled workers
