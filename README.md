@@ -35,7 +35,7 @@ respecto de la versión anterior está en
    salidas están versionadas, el artículo compila sin volver a correr el pipeline.
    Detalles en [`articulo/README.md`](articulo/README.md).
 
-Versiones anteriores del código: la etiqueta
+Versiones anteriores del código: la rama
 [`pipeline-agosto-2026`](../../tree/pipeline-agosto-2026) conserva la cadena
 `codigo/` (01 a 11 y robustez) usada hasta la presentación del 7 de octubre.
 
